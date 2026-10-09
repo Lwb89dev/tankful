@@ -44,7 +44,7 @@ data class CatalogueProvenance(
     val retrievalProtocol: String,
 )
 
-/** Read-only copy of assets/official_catalogue.db. Not the Room logbook. */
+/** Read-only copy of assets/official_catalogue.pack. Not the Room logbook. */
 @Singleton
 class OfficialCatalogue @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -364,7 +364,7 @@ class OfficialCatalogue @Inject constructor(
     private data class Bound(val where: String, val args: Array<String>)
 
     private companion object {
-        private val assetName = "official_catalogue.db.gz"
+        private val assetName = "official_catalogue.pack"
         private val fileName = "official_catalogue.db"
         private val selectSql = """
             SELECT id, source, make, model, variant, year, fuel, powertrain, test_cycle, measure_kind,

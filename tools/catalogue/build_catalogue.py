@@ -38,7 +38,7 @@ from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RAW = os.path.join(ROOT, "catalog", "raw")
 DB_PATH = os.path.join(ROOT, "app", "src", "main", "assets", "official_catalogue.db")
-GZ_PATH = DB_PATH + ".gz"
+GZ_PATH = os.path.join(ROOT, "app", "src", "main", "assets", "official_catalogue.pack")
 
 ADEME_URL = "https://www.data.gouv.fr/datasets/emissions-de-co2-et-de-polluants-des-vehicules-commercialises-en-france"
 ADEME_PROTOCOL = "data.gouv.fr/emissions-de-co2-vehicules-commercialises-en-france"
