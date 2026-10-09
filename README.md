@@ -47,3 +47,7 @@ This is not every car on the road. Three official tables are included. Each figu
 There is no compact official European consumption table in this database for 2016–2020. The current ADEME extract is a min/max band without a year and is not imported. Natural gas, E85, electricity, hydrogen, and miles-per-gallon-equivalent figures are skipped rather than converted. A real full-tank average is compared with the official combined figure when that figure is liquid fuel, including a non-plug-in hybrid. Weighted and charge-sustaining plug-in figures are stored and are not turned into a percentage.
 
 The phone unpacks the gzip asset into app files when the SQLite user version changes. Rebuild with `catalog/.venv/bin/python tools/catalogue/build_catalogue.py` after `python3 tools/catalogue/fetch_eea.py`.
+
+## License
+
+The Tankful code is under the MIT license. See `LICENSE`. The bundled official figures stay under the terms of their publishers, named above.
