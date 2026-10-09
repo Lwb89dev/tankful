@@ -1,0 +1,2176 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 4,
+    "identityHash": "bf01eaf883b6322a887ccbf60ece63e3",
+    "entities": [
+      {
+        "tableName": "vehicles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `manufacturer` TEXT NOT NULL, `model` TEXT NOT NULL, `model_year` INTEGER NOT NULL, `powertrain` TEXT NOT NULL, `primary_fuel` TEXT NOT NULL, `secondary_fuel` TEXT, `plate` TEXT, `vin` TEXT, `purchase_date` TEXT, `purchase_price_minor` INTEGER, `purchase_currency` TEXT, `generation` TEXT, `engine` TEXT, `power_unscaled` INTEGER, `power_scale` INTEGER, `power_unit` TEXT, `transmission` TEXT, `drivetrain` TEXT, `registration_year` INTEGER, `distance_unit` TEXT NOT NULL, `economy_preference` TEXT NOT NULL, `notes` TEXT, `image_attachment_id` TEXT, `last_fuel_kind` TEXT, `last_station_name` TEXT, `last_full_tank` INTEGER, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "manufacturer",
+            "columnName": "manufacturer",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "model",
+            "columnName": "model",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelYear",
+            "columnName": "model_year",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "powertrain",
+            "columnName": "powertrain",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "primaryFuel",
+            "columnName": "primary_fuel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "secondaryFuel",
+            "columnName": "secondary_fuel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "plate",
+            "columnName": "plate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "vin",
+            "columnName": "vin",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "purchaseDate",
+            "columnName": "purchase_date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "purchasePriceMinor",
+            "columnName": "purchase_price_minor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "purchaseCurrency",
+            "columnName": "purchase_currency",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "generation",
+            "columnName": "generation",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "engine",
+            "columnName": "engine",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "powerUnscaled",
+            "columnName": "power_unscaled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "powerScale",
+            "columnName": "power_scale",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "powerUnit",
+            "columnName": "power_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "transmission",
+            "columnName": "transmission",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "drivetrain",
+            "columnName": "drivetrain",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "registrationYear",
+            "columnName": "registration_year",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "distanceUnit",
+            "columnName": "distance_unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "economyPreference",
+            "columnName": "economy_preference",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "imageAttachmentId",
+            "columnName": "image_attachment_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastFuelKind",
+            "columnName": "last_fuel_kind",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastStationName",
+            "columnName": "last_station_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastFullTank",
+            "columnName": "last_full_tank",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "vehicle_specifications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `vehicle_id` TEXT NOT NULL, `fuel_kind` TEXT NOT NULL, `combined_unit` TEXT, `combined_scale` INTEGER, `combined_unscaled` INTEGER, `city_unit` TEXT, `city_scale` INTEGER, `city_unscaled` INTEGER, `highway_unit` TEXT, `highway_scale` INTEGER, `highway_unscaled` INTEGER, `urban_unit` TEXT, `urban_scale` INTEGER, `urban_unscaled` INTEGER, `extra_urban_unit` TEXT, `extra_urban_scale` INTEGER, `extra_urban_unscaled` INTEGER, `co2_scale` INTEGER, `co2_unscaled` INTEGER, `co2_grams_per_mile` INTEGER, `test_cycle` TEXT NOT NULL, `measure_kind` TEXT NOT NULL, `source` TEXT NOT NULL, `source_url` TEXT, `retrieved_at` INTEGER, `retrieval_protocol` TEXT, `is_active` INTEGER NOT NULL, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`vehicle_id`) REFERENCES `vehicles`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vehicleId",
+            "columnName": "vehicle_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fuelKind",
+            "columnName": "fuel_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "combinedUnit",
+            "columnName": "combined_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "combinedScale",
+            "columnName": "combined_scale",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "combinedUnscaled",
+            "columnName": "combined_unscaled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cityUnit",
+            "columnName": "city_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cityScale",
+            "columnName": "city_scale",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cityUnscaled",
+            "columnName": "city_unscaled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "highwayUnit",
+            "columnName": "highway_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "highwayScale",
+            "columnName": "highway_scale",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "highwayUnscaled",
+            "columnName": "highway_unscaled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "urbanUnit",
+            "columnName": "urban_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "urbanScale",
+            "columnName": "urban_scale",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "urbanUnscaled",
+            "columnName": "urban_unscaled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "extraUrbanUnit",
+            "columnName": "extra_urban_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "extraUrbanScale",
+            "columnName": "extra_urban_scale",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "extraUrbanUnscaled",
+            "columnName": "extra_urban_unscaled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "co2Scale",
+            "columnName": "co2_scale",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "co2Unscaled",
+            "columnName": "co2_unscaled",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "co2GramsPerMile",
+            "columnName": "co2_grams_per_mile",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "testCycle",
+            "columnName": "test_cycle",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "measureKind",
+            "columnName": "measure_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceUrl",
+            "columnName": "source_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "retrievedAt",
+            "columnName": "retrieved_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "retrievalProtocol",
+            "columnName": "retrieval_protocol",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "is_active",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_vehicle_specifications_vehicle_id",
+            "unique": false,
+            "columnNames": [
+              "vehicle_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vehicle_specifications_vehicle_id` ON `${TABLE_NAME}` (`vehicle_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vehicles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vehicle_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "odometer_readings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `vehicle_id` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `metres` INTEGER NOT NULL, `entry_unit` TEXT NOT NULL, `entry_unscaled` INTEGER NOT NULL, `entry_scale` INTEGER NOT NULL, `source` TEXT NOT NULL, `source_entity_id` TEXT, `epoch_id` TEXT NOT NULL, `reason` TEXT, `note` TEXT, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`vehicle_id`) REFERENCES `vehicles`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vehicleId",
+            "columnName": "vehicle_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "metres",
+            "columnName": "metres",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entryUnit",
+            "columnName": "entry_unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entryUnscaled",
+            "columnName": "entry_unscaled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entryScale",
+            "columnName": "entry_scale",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceEntityId",
+            "columnName": "source_entity_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "epochId",
+            "columnName": "epoch_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "reason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_odometer_readings_vehicle_id_timestamp",
+            "unique": false,
+            "columnNames": [
+              "vehicle_id",
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_odometer_readings_vehicle_id_timestamp` ON `${TABLE_NAME}` (`vehicle_id`, `timestamp`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vehicles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vehicle_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "expenses",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `vehicle_id` TEXT NOT NULL, `category_id` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `total_currency` TEXT NOT NULL, `total_minor` INTEGER NOT NULL, `note` TEXT, `origin` TEXT NOT NULL, `origin_id` TEXT, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`vehicle_id`) REFERENCES `vehicles`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`category_id`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vehicleId",
+            "columnName": "vehicle_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "category_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalCurrency",
+            "columnName": "total_currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalMinor",
+            "columnName": "total_minor",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "origin",
+            "columnName": "origin",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originId",
+            "columnName": "origin_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_expenses_vehicle_id_timestamp",
+            "unique": false,
+            "columnNames": [
+              "vehicle_id",
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_expenses_vehicle_id_timestamp` ON `${TABLE_NAME}` (`vehicle_id`, `timestamp`)"
+          },
+          {
+            "name": "index_expenses_category_id",
+            "unique": false,
+            "columnNames": [
+              "category_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_expenses_category_id` ON `${TABLE_NAME}` (`category_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vehicles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vehicle_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "categories",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "category_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "refuels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `vehicle_id` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `quantity_amount` INTEGER NOT NULL, `quantity_unit` TEXT NOT NULL, `fuel_kind` TEXT NOT NULL, `energy_kind` TEXT NOT NULL, `unit_price_currency` TEXT NOT NULL, `unit_price_scale` INTEGER NOT NULL, `unit_price_unscaled` INTEGER NOT NULL, `unit_price_derived` INTEGER NOT NULL, `total_currency` TEXT NOT NULL, `total_minor` INTEGER NOT NULL, `amounts_disagreed` INTEGER NOT NULL, `full_tank` INTEGER NOT NULL, `station_name` TEXT, `station_osm_type` TEXT, `station_osm_id` INTEGER, `latitude` REAL, `longitude` REAL, `note` TEXT, `odometer_reading_id` TEXT, `expense_id` TEXT NOT NULL, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`vehicle_id`) REFERENCES `vehicles`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`expense_id`) REFERENCES `expenses`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`odometer_reading_id`) REFERENCES `odometer_readings`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vehicleId",
+            "columnName": "vehicle_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quantityAmount",
+            "columnName": "quantity_amount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quantityUnit",
+            "columnName": "quantity_unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fuelKind",
+            "columnName": "fuel_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "energyKind",
+            "columnName": "energy_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unitPriceCurrency",
+            "columnName": "unit_price_currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unitPriceScale",
+            "columnName": "unit_price_scale",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unitPriceUnscaled",
+            "columnName": "unit_price_unscaled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unitPriceDerived",
+            "columnName": "unit_price_derived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalCurrency",
+            "columnName": "total_currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalMinor",
+            "columnName": "total_minor",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amountsDisagreed",
+            "columnName": "amounts_disagreed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fullTank",
+            "columnName": "full_tank",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stationName",
+            "columnName": "station_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "stationOsmType",
+            "columnName": "station_osm_type",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "stationOsmId",
+            "columnName": "station_osm_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "odometerReadingId",
+            "columnName": "odometer_reading_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "expenseId",
+            "columnName": "expense_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_refuels_vehicle_id_timestamp",
+            "unique": false,
+            "columnNames": [
+              "vehicle_id",
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_refuels_vehicle_id_timestamp` ON `${TABLE_NAME}` (`vehicle_id`, `timestamp`)"
+          },
+          {
+            "name": "index_refuels_expense_id",
+            "unique": true,
+            "columnNames": [
+              "expense_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_refuels_expense_id` ON `${TABLE_NAME}` (`expense_id`)"
+          },
+          {
+            "name": "index_refuels_odometer_reading_id",
+            "unique": true,
+            "columnNames": [
+              "odometer_reading_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_refuels_odometer_reading_id` ON `${TABLE_NAME}` (`odometer_reading_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vehicles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vehicle_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "expenses",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "expense_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "odometer_readings",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "odometer_reading_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "categories",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `parent_group` TEXT NOT NULL, `is_system` INTEGER NOT NULL, `sort_order` INTEGER NOT NULL, `display_name` TEXT NOT NULL, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parentGroup",
+            "columnName": "parent_group",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSystem",
+            "columnName": "is_system",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sort_order",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "tags",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `display_name` TEXT NOT NULL, `normalized_name` TEXT NOT NULL, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "normalizedName",
+            "columnName": "normalized_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_tags_normalized_name",
+            "unique": true,
+            "columnNames": [
+              "normalized_name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_tags_normalized_name` ON `${TABLE_NAME}` (`normalized_name`)"
+          }
+        ]
+      },
+      {
+        "tableName": "entity_tags",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`entity_type` TEXT NOT NULL, `entity_id` TEXT NOT NULL, `tag_id` TEXT NOT NULL, PRIMARY KEY(`entity_type`, `entity_id`, `tag_id`), FOREIGN KEY(`tag_id`) REFERENCES `tags`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "entityType",
+            "columnName": "entity_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entity_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagId",
+            "columnName": "tag_id",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "entity_type",
+            "entity_id",
+            "tag_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_entity_tags_tag_id",
+            "unique": false,
+            "columnNames": [
+              "tag_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_entity_tags_tag_id` ON `${TABLE_NAME}` (`tag_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "tags",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "tag_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "service_types",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `default_category_id` TEXT NOT NULL, `is_system` INTEGER NOT NULL, `display_name` TEXT NOT NULL, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCategoryId",
+            "columnName": "default_category_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSystem",
+            "columnName": "is_system",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "service_providers",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `kind` TEXT NOT NULL, `name` TEXT NOT NULL, `location` TEXT, `contact` TEXT, `note` TEXT, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location",
+            "columnName": "location",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contact",
+            "columnName": "contact",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "maintenance_records",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `vehicle_id` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `service_type_id` TEXT NOT NULL, `provider_id` TEXT, `category_id` TEXT NOT NULL, `odometer_reading_id` TEXT, `expense_id` TEXT NOT NULL, `labour_currency` TEXT, `labour_minor` INTEGER, `parts_currency` TEXT, `parts_minor` INTEGER, `total_currency` TEXT NOT NULL, `total_minor` INTEGER NOT NULL, `amounts_disagreed` INTEGER NOT NULL, `next_date` TEXT, `next_odometer_metres` INTEGER, `note` TEXT, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`vehicle_id`) REFERENCES `vehicles`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`expense_id`) REFERENCES `expenses`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vehicleId",
+            "columnName": "vehicle_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serviceTypeId",
+            "columnName": "service_type_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "providerId",
+            "columnName": "provider_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "category_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "odometerReadingId",
+            "columnName": "odometer_reading_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "expenseId",
+            "columnName": "expense_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "labourCurrency",
+            "columnName": "labour_currency",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "labourMinor",
+            "columnName": "labour_minor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "partsCurrency",
+            "columnName": "parts_currency",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "partsMinor",
+            "columnName": "parts_minor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "totalCurrency",
+            "columnName": "total_currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalMinor",
+            "columnName": "total_minor",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amountsDisagreed",
+            "columnName": "amounts_disagreed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nextDate",
+            "columnName": "next_date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "nextOdometerMetres",
+            "columnName": "next_odometer_metres",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_maintenance_records_vehicle_id",
+            "unique": false,
+            "columnNames": [
+              "vehicle_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_maintenance_records_vehicle_id` ON `${TABLE_NAME}` (`vehicle_id`)"
+          },
+          {
+            "name": "index_maintenance_records_expense_id",
+            "unique": true,
+            "columnNames": [
+              "expense_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_maintenance_records_expense_id` ON `${TABLE_NAME}` (`expense_id`)"
+          },
+          {
+            "name": "index_maintenance_records_odometer_reading_id",
+            "unique": true,
+            "columnNames": [
+              "odometer_reading_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_maintenance_records_odometer_reading_id` ON `${TABLE_NAME}` (`odometer_reading_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vehicles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vehicle_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "expenses",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "expense_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "maintenance_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `maintenance_id` TEXT NOT NULL, `description` TEXT NOT NULL, `cost_minor` INTEGER, `cost_currency` TEXT, `quantity_text` TEXT, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`maintenance_id`) REFERENCES `maintenance_records`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "maintenanceId",
+            "columnName": "maintenance_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "costMinor",
+            "columnName": "cost_minor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "costCurrency",
+            "columnName": "cost_currency",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "quantityText",
+            "columnName": "quantity_text",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_maintenance_items_maintenance_id",
+            "unique": false,
+            "columnNames": [
+              "maintenance_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_maintenance_items_maintenance_id` ON `${TABLE_NAME}` (`maintenance_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "maintenance_records",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "maintenance_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "reminders",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `vehicle_id` TEXT NOT NULL, `kind` TEXT NOT NULL, `due_date` TEXT, `due_odometer_metres` INTEGER, `interval_days` INTEGER, `lead_time_days` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `custom_title` TEXT, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`vehicle_id`) REFERENCES `vehicles`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vehicleId",
+            "columnName": "vehicle_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dueDate",
+            "columnName": "due_date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dueOdometerMetres",
+            "columnName": "due_odometer_metres",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "intervalDays",
+            "columnName": "interval_days",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "leadTimeDays",
+            "columnName": "lead_time_days",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enabled",
+            "columnName": "enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "customTitle",
+            "columnName": "custom_title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_reminders_vehicle_id",
+            "unique": false,
+            "columnNames": [
+              "vehicle_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_reminders_vehicle_id` ON `${TABLE_NAME}` (`vehicle_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vehicles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vehicle_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "interval_judgements",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `opening_refuel_id` TEXT NOT NULL, `closing_refuel_id` TEXT NOT NULL, `confirmed` INTEGER NOT NULL, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "openingRefuelId",
+            "columnName": "opening_refuel_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "closingRefuelId",
+            "columnName": "closing_refuel_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "confirmed",
+            "columnName": "confirmed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_interval_judgements_opening_refuel_id_closing_refuel_id",
+            "unique": true,
+            "columnNames": [
+              "opening_refuel_id",
+              "closing_refuel_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_interval_judgements_opening_refuel_id_closing_refuel_id` ON `${TABLE_NAME}` (`opening_refuel_id`, `closing_refuel_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "attachments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `owner_type` TEXT NOT NULL, `owner_id` TEXT NOT NULL, `relative_path` TEXT NOT NULL, `mime` TEXT NOT NULL, `filename` TEXT NOT NULL, `sha256` TEXT, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ownerType",
+            "columnName": "owner_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ownerId",
+            "columnName": "owner_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relativePath",
+            "columnName": "relative_path",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mime",
+            "columnName": "mime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filename",
+            "columnName": "filename",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sha256",
+            "columnName": "sha256",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_attachments_relative_path",
+            "unique": true,
+            "columnNames": [
+              "relative_path"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_attachments_relative_path` ON `${TABLE_NAME}` (`relative_path`)"
+          }
+        ]
+      },
+      {
+        "tableName": "settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `default_currency` TEXT NOT NULL, `relay_urls_json` TEXT NOT NULL, `default_lead_time_days` INTEGER NOT NULL, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `install_id` TEXT, `content_hash` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultCurrency",
+            "columnName": "default_currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relayUrlsJson",
+            "columnName": "relay_urls_json",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultLeadTimeDays",
+            "columnName": "default_lead_time_days",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deleted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "installId",
+            "columnName": "install_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "station_cache",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`osm_type` TEXT NOT NULL, `osm_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `tags_json` TEXT NOT NULL, `centre_lat` REAL NOT NULL, `centre_lon` REAL NOT NULL, `fetched_at` INTEGER NOT NULL, PRIMARY KEY(`osm_type`, `osm_id`))",
+        "fields": [
+          {
+            "fieldPath": "osmType",
+            "columnName": "osm_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "osmId",
+            "columnName": "osm_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagsJson",
+            "columnName": "tags_json",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "centreLat",
+            "columnName": "centre_lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "centreLon",
+            "columnName": "centre_lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fetchedAt",
+            "columnName": "fetched_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "osm_type",
+            "osm_id"
+          ]
+        }
+      },
+      {
+        "tableName": "outbox",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `entity_type` TEXT NOT NULL, `entity_id` TEXT NOT NULL, `revision` INTEGER NOT NULL, `state` TEXT NOT NULL, `signed_event` TEXT, `payload` TEXT NOT NULL, `created_at` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityType",
+            "columnName": "entity_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entity_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "signedEvent",
+            "columnName": "signed_event",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "payload",
+            "columnName": "payload",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_outbox_entity_type_entity_id_revision",
+            "unique": true,
+            "columnNames": [
+              "entity_type",
+              "entity_id",
+              "revision"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_outbox_entity_type_entity_id_revision` ON `${TABLE_NAME}` (`entity_type`, `entity_id`, `revision`)"
+          }
+        ]
+      },
+      {
+        "tableName": "outbox_relay_ack",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`outbox_id` TEXT NOT NULL, `relay_url` TEXT NOT NULL, `accepted` INTEGER NOT NULL, PRIMARY KEY(`outbox_id`, `relay_url`))",
+        "fields": [
+          {
+            "fieldPath": "outboxId",
+            "columnName": "outbox_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relayUrl",
+            "columnName": "relay_url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accepted",
+            "columnName": "accepted",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "outbox_id",
+            "relay_url"
+          ]
+        }
+      },
+      {
+        "tableName": "applied_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`event_id` TEXT NOT NULL, `created_at` INTEGER NOT NULL, PRIMARY KEY(`event_id`))",
+        "fields": [
+          {
+            "fieldPath": "eventId",
+            "columnName": "event_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "event_id"
+          ]
+        }
+      },
+      {
+        "tableName": "published_content_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`relay_url` TEXT NOT NULL, `event_id` TEXT NOT NULL, `entity_type` TEXT NOT NULL, `entity_id` TEXT NOT NULL, PRIMARY KEY(`relay_url`, `event_id`))",
+        "fields": [
+          {
+            "fieldPath": "relayUrl",
+            "columnName": "relay_url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eventId",
+            "columnName": "event_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityType",
+            "columnName": "entity_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entity_id",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "relay_url",
+            "event_id"
+          ]
+        }
+      },
+      {
+        "tableName": "quarantine",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`event_id` TEXT NOT NULL, `reason` TEXT NOT NULL, `created_at` INTEGER NOT NULL, PRIMARY KEY(`event_id`))",
+        "fields": [
+          {
+            "fieldPath": "eventId",
+            "columnName": "event_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "reason",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "event_id"
+          ]
+        }
+      },
+      {
+        "tableName": "snapshot_fork",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `entity_type` TEXT NOT NULL, `entity_id` TEXT NOT NULL, `content_hash` TEXT NOT NULL, `snapshot_json` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityType",
+            "columnName": "entity_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entity_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "snapshotJson",
+            "columnName": "snapshot_json",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_snapshot_fork_entity_type_entity_id_content_hash",
+            "unique": true,
+            "columnNames": [
+              "entity_type",
+              "entity_id",
+              "content_hash"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_snapshot_fork_entity_type_entity_id_content_hash` ON `${TABLE_NAME}` (`entity_type`, `entity_id`, `content_hash`)"
+          }
+        ]
+      },
+      {
+        "tableName": "pending_snapshots",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`event_id` TEXT NOT NULL, `snapshot_json` TEXT NOT NULL, PRIMARY KEY(`event_id`))",
+        "fields": [
+          {
+            "fieldPath": "eventId",
+            "columnName": "event_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "snapshotJson",
+            "columnName": "snapshot_json",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "event_id"
+          ]
+        }
+      },
+      {
+        "tableName": "conflicts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `entity_type` TEXT NOT NULL, `entity_id` TEXT NOT NULL, `state` TEXT NOT NULL, `local_hash` TEXT NOT NULL, `other_hash` TEXT NOT NULL, `other_snapshot` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityType",
+            "columnName": "entity_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entity_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localHash",
+            "columnName": "local_hash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "otherHash",
+            "columnName": "other_hash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "otherSnapshot",
+            "columnName": "other_snapshot",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bf01eaf883b6322a887ccbf60ece63e3')"
+    ]
+  }
+}
