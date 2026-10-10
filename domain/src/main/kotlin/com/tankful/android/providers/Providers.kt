@@ -28,6 +28,15 @@ const val MIMIT_DATASET_URL: String =
     "https://www.mimit.gov.it/it/open-data/elenco-dataset/carburanti-prezzi-praticati-e-anagrafica-degli-impianti"
 const val OVERPASS_INTERPRETER_URL: String = "https://overpass-api.de/api/interpreter"
 const val DEFAULT_MAP_STYLE_URL: String = "https://tiles.openfreemap.org/styles/liberty"
+
+/** Official HTTPS hosts the logbook is allowed to call. Subdomains of these names only. */
+fun publicHttpsHost(host: String): Boolean {
+    val name = host.trim().lowercase()
+    if (name.isEmpty() || name.any { it.isWhitespace() || it == '@' }) return false
+    if (name == "fueleconomy.gov" || name.endsWith(".fueleconomy.gov")) return true
+    if (name == "mimit.gov.it" || name.endsWith(".mimit.gov.it")) return true
+    return name == "overpass-api.de" || name.endsWith(".overpass-api.de")
+}
 const val TANKFUL_USER_AGENT: String = "Tankful Android/1"
 
 const val STATION_QUERY_RADIUS_METRES: Int = 8000

@@ -62,7 +62,7 @@ class SyncEngine @Inject constructor(
         val allow = urls.filter { it.startsWith("ws://") }.toSet()
         val pubkey = device.signerPubkey.first() ?: return
         val packageName = device.signerPackage.first()
-        for (row in dao.pendingOutbox()) {
+        for (row in dao.pendingOutbox().take(OUTBOX_BATCH)) {
             publishRow(row, urls, allow, pubkey, packageName)
         }
     }
@@ -96,7 +96,7 @@ class SyncEngine @Inject constructor(
         packageName: String?,
     ) {
         val signed = row.signedEvent ?: signPayload(row.payload, pubkey, packageName)
-        if (signed == null || !verifySignedEvent(signed)) {
+        if (signed == null || !snapshotEventOk(signed, pubkey)) {
             dao.upsertOutbox(row.copy(state = OutboxState.AWAITING_SIGNER.name))
             return
         }
@@ -120,11 +120,15 @@ class SyncEngine @Inject constructor(
         val cipher = signer.encrypt(packageName, payload, pubkey)
         if (cipher.mapping.outcome != SignerFailure.OK) return null
         val content = cipher.value ?: return null
+        if (!nip44Wire(content)) return null
         val createdAt = Instant.now().epochSecond
         val unsigned = unsignedEvent(pubkey, createdAt, content)
         val signed = signer.sign(packageName, unsigned)
         if (signed.mapping.outcome != SignerFailure.OK) return null
-        return signed.value
+        val event = signed.value ?: return null
+        if (eventText(event, "content") != content) return null
+        if (!snapshotEventOk(event, pubkey)) return null
+        return event
     }
 
     private suspend fun maybeKind5(
@@ -145,6 +149,9 @@ class SyncEngine @Inject constructor(
         val unsigned = canonicalJson.encodeToString(eventBody(id, pubkey, createdAt, draft.kind, tags, draft.content, null))
         val signed = signer.sign(packageName, unsigned).value ?: return
         if (!verifySignedEvent(signed)) return
+        if (eventText(signed, "pubkey") != pubkey) return
+        if (eventKind(signed) != 5) return
+        if (eventText(signed, "content") != "") return
         for (url in urls) relays.publish(url, allow, signed)
     }
 
@@ -231,7 +238,19 @@ class SyncEngine @Inject constructor(
         val raw = catalog.settings().relayUrlsJson
         val array = runCatching { canonicalJson.parseToJsonElement(raw) }.getOrNull() as? JsonArray ?: return emptyList()
         return array.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+            .map { it.trim() }
+            .filter { relayUrlAllowed(it) }
+            .distinct()
+            .take(RELAY_LIST_CAP)
     }
+}
+
+private fun snapshotEventOk(json: String, pubkey: String): Boolean {
+    if (!verifySignedEvent(json)) return false
+    if (eventText(json, "pubkey") != pubkey) return false
+    if (eventKind(json) != TANKFUL_SNAPSHOT_KIND) return false
+    val content = eventText(json, "content") ?: return false
+    return nip44Wire(content)
 }
 
 private fun headsOf(book: Logbook): Map<Pair<String, String>, Head> {

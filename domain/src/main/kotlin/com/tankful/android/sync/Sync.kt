@@ -350,6 +350,34 @@ fun mapNip55(
     return Nip55Mapping(SignerFailure.OK, false)
 }
 
+const val RELAY_LIST_CAP = 8
+const val OUTBOX_BATCH = 20
+
+/** wss:// or ws:// with a host and no userinfo. Cleartext is still refused outside the home allow list. */
+fun relayUrlAllowed(raw: String): Boolean {
+    val url = raw.trim()
+    if (url.length !in 1..200) return false
+    if (url.any { it.isWhitespace() || it == '@' || it == '#' || it == '\\' }) return false
+    val rest = when {
+        url.startsWith("wss://") -> url.removePrefix("wss://")
+        url.startsWith("ws://") -> url.removePrefix("ws://")
+        else -> return false
+    }
+    if (rest.isEmpty()) return false
+    val host = rest.substringBefore('/').substringBefore('?')
+    if (host.isEmpty() || host.startsWith(".")) return false
+    if (host.startsWith("[")) return host.indexOf(']') > 1
+    val name = host.substringBefore(':')
+    if (name.isEmpty() || name.length > 253) return false
+    return name.split('.').all { labelOk(it) }
+}
+
+private fun labelOk(label: String): Boolean {
+    if (label.isEmpty() || label.length > 63) return false
+    if (label.first() == '-' || label.last() == '-') return false
+    return label.all { it.isLetterOrDigit() || it == '-' }
+}
+
 fun rawCleartextSocketAllowed(url: String, userAllowList: Set<String>): Boolean {
     if (!url.startsWith("ws://")) return false
     return url in userAllowList

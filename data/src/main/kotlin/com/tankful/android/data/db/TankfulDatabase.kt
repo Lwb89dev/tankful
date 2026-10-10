@@ -55,7 +55,9 @@ abstract class TankfulDatabase : RoomDatabase() {
             val builder = if (name == null) {
                 Room.inMemoryDatabaseBuilder(context, TankfulDatabase::class.java)
             } else {
+                val cipher = LogbookCipher.factory(context, name)
                 Room.databaseBuilder(context, TankfulDatabase::class.java, name)
+                    .openHelperFactory(cipher)
             }
             return builder
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)

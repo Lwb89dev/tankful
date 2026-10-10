@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Două rezervoare pline cu același combustibil desenează acest grafic.</string>
     <string name="station_list_show">Arată stațiile</string>
     <string name="station_list_hide">Ascunde stațiile</string>
+    <string name="catalogue_choose_fuel">Alege un carburant înainte de a salva.</string>
+    <string name="catalogue_choose_vehicle">Atinge un vehicul din listă înainte de a salva.</string>
+    <string name="support_tankful">Sprijiniți Tankful</string>
+    <string name="support_copied">Adresă Lightning copiată</string>
 </resources>

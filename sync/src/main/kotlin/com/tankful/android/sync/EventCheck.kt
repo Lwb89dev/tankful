@@ -7,6 +7,7 @@ import fr.acinq.secp256k1.Secp256k1
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
@@ -44,4 +45,37 @@ fun verifySignedEvent(json: String): Boolean {
     return runCatching {
         Secp256k1.get().verifySchnorr(Hex.decode(sig), Hex.decode(id), Hex.decode(pubkey))
     }.getOrDefault(false)
+}
+
+fun eventText(json: String, field: String): String? {
+    val event = runCatching { canonicalJson.parseToJsonElement(json).jsonObject }.getOrNull() ?: return null
+    return event[field]?.jsonPrimitive?.contentOrNull
+}
+
+fun eventKind(json: String): Int? {
+    val event = runCatching { canonicalJson.parseToJsonElement(json).jsonObject }.getOrNull() ?: return null
+    return event["kind"]?.jsonPrimitive?.longOrNull?.toInt()
+}
+
+/** Schnorr-sign an unsigned NIP-01 event. The secret is not copied into the result. */
+fun signLocalEvent(secret: ByteArray, unsigned: String?): String? {
+    if (secret.size != 32 || unsigned.isNullOrBlank()) return null
+    val event = runCatching { canonicalJson.parseToJsonElement(unsigned).jsonObject }.getOrNull() ?: return null
+    val id = event["id"]?.jsonPrimitive?.contentOrNull ?: return null
+    if (id.length != 64) return null
+    val aux = ByteArray(32)
+    java.security.SecureRandom().nextBytes(aux)
+    val sig = try {
+        Secp256k1.get().signSchnorr(Hex.decode(id), secret, aux)
+    } catch (ignored: Exception) {
+        return null
+    } finally {
+        aux.fill(0)
+    }
+    val signed = linkedMapOf<String, JsonElement>()
+    for (name in listOf("id", "pubkey", "created_at", "kind", "tags", "content")) {
+        signed[name] = event[name] ?: return null
+    }
+    signed["sig"] = JsonPrimitive(Hex.encode(sig))
+    return canonicalJson.encodeToString(JsonObject(signed))
 }

@@ -18,3 +18,4 @@
 
 -keep class fr.acinq.secp256k1.** { *; }
 -keep class androidx.room.** { *; }
+-keep class net.zetetic.database.** { *; }

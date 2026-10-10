@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Tarraingíonn dhá umar lán den bhreosla céanna an cairt seo.</string>
     <string name="station_list_show">Taispeáin na stáisiúin</string>
     <string name="station_list_hide">Folaigh na stáisiúin</string>
+    <string name="catalogue_choose_fuel">Roghnaigh breosla sula sábhálann tú.</string>
+    <string name="catalogue_choose_vehicle">Tapáil feithicil sa liosta sula sábhálann tú.</string>
+    <string name="support_tankful">Tacaigh le Tankful</string>
+    <string name="support_copied">Seoladh Lightning cóipeáilte</string>
 </resources>

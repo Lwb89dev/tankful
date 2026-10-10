@@ -20,6 +20,7 @@ import com.tankful.android.money.deriveUnitPriceUnscaled
 import com.tankful.android.quantity.Quantity
 import com.tankful.android.quantity.QuantityUnit
 import com.tankful.android.transfer.AttachmentMeta
+import com.tankful.android.transfer.attachmentFile
 import com.tankful.android.transfer.DeletedRef
 import com.tankful.android.transfer.ExportDocument
 import com.tankful.android.transfer.ImportPreview
@@ -128,7 +129,7 @@ class BackupStore @Inject constructor(
         val document = exportDocument(appVersion)
         val files = linkedMapOf<String, ByteArray>()
         for (attachment in document.attachments) {
-            val file = File(filesDir, attachment.relativePath)
+            val file = attachmentFile(filesDir, attachment.relativePath) ?: continue
             if (file.isFile) files[attachment.filename] = file.readBytes()
         }
         return zipBackup(encodeExport(document), files)

@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Dva puna spremnika istog goriva crtaju ovaj graf.</string>
     <string name="station_list_show">Prikaži crpke</string>
     <string name="station_list_hide">Sakrij crpke</string>
+    <string name="catalogue_choose_fuel">Odaberi gorivo prije spremanja.</string>
+    <string name="catalogue_choose_vehicle">Dodirni vozilo na popisu prije spremanja.</string>
+    <string name="support_tankful">Podržite Tankful</string>
+    <string name="support_copied">Adresa Lightning kopirana</string>
 </resources>

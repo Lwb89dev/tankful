@@ -2,9 +2,9 @@ package com.tankful.android.sync
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.CancellationSignal
+import com.tankful.android.data.store.LocalKeyStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,9 +15,12 @@ import kotlinx.coroutines.withTimeout
 
 data class SignerCall(val mapping: Nip55Mapping, val value: String?, val packageName: String?)
 
+const val AMBER_PACKAGE = "com.greenart7c3.nostrsigner"
+
 @Singleton
 class Nip55Signer @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val localKeys: LocalKeyStore,
 ) {
     suspend fun publicKey(rememberedPackage: String?): SignerCall = call(rememberedPackage, "GET_PUBLIC_KEY", null, null)
 
@@ -39,7 +42,8 @@ class Nip55Signer @Inject constructor(
         selection: String?,
         args: Array<String>?,
     ): SignerCall = withContext(Dispatchers.IO) {
-        val packageName = rememberedPackage ?: findSigner()
+        if (rememberedPackage == LOCAL_NSEC_SIGNER) return@withContext localCall(method, selection, args)
+        val packageName = if (rememberedPackage == AMBER_PACKAGE) AMBER_PACKAGE else findSigner()
         if (packageName == null) return@withContext SignerCall(Nip55Mapping(SignerFailure.NOT_INSTALLED, false), null, null)
         try {
             withTimeout(60_000) { query(packageName, method, selection, args) }
@@ -48,7 +52,30 @@ class Nip55Signer @Inject constructor(
         }
     }
 
+    private fun localCall(method: String, selection: String?, args: Array<String>?): SignerCall {
+        val secret = localKeys.load() ?: return SignerCall(mapNip55(0, false, true, false), null, LOCAL_NSEC_SIGNER)
+        try {
+            val value = localValue(method, selection, args, secret)
+            val code = if (value != null) ANDROID_RESULT_OK else 0
+            return SignerCall(mapNip55(code, false, true, false), value, LOCAL_NSEC_SIGNER)
+        } finally {
+            secret.fill(0)
+        }
+    }
+
+    private fun localValue(method: String, selection: String?, args: Array<String>?, secret: ByteArray): String? {
+        val pubkey = args?.firstOrNull().orEmpty()
+        return when (method) {
+            "GET_PUBLIC_KEY" -> xOnlyPubkeyHex(secret)
+            "NIP44_ENCRYPT" -> nip44Encrypt(secret, pubkey, selection.orEmpty())
+            "NIP44_DECRYPT" -> nip44Decrypt(secret, pubkey, selection.orEmpty())
+            "SIGN_EVENT" -> signLocalEvent(secret, selection)
+            else -> null
+        }
+    }
+
     private fun query(packageName: String, method: String, selection: String?, args: Array<String>?): SignerCall {
+        if (packageName != AMBER_PACKAGE) return SignerCall(mapNip55(0, false, true, false), null, null)
         val uri = Uri.parse("content://$packageName.$method")
         val cursor = context.contentResolver.query(uri, null, selection, args, null, CancellationSignal())
         if (cursor == null) return SignerCall(mapNip55(0, false, true, false), null, packageName)
@@ -61,25 +88,17 @@ class Nip55Signer @Inject constructor(
         }
     }
 
-    fun amberInstalled(): Boolean {
-        if (installed(AMBER_PACKAGE)) return true
-        return findSigner() != null
-    }
+    fun amberInstalled(): Boolean = installed(AMBER_PACKAGE)
 
     fun publicKeyIntent(): Intent? {
-        val packageName = if (installed(AMBER_PACKAGE)) AMBER_PACKAGE else findSigner() ?: return null
+        if (!installed(AMBER_PACKAGE)) return null
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("nostrsigner:"))
-        intent.setPackage(packageName)
+        intent.setPackage(AMBER_PACKAGE)
         intent.putExtra("type", "get_public_key")
         return intent
     }
 
-    private fun findSigner(): String? {
-        if (installed(AMBER_PACKAGE)) return AMBER_PACKAGE
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("nostrsigner:"))
-        val matches = context.packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-        return matches.firstOrNull()?.activityInfo?.packageName
-    }
+    private fun findSigner(): String? = if (installed(AMBER_PACKAGE)) AMBER_PACKAGE else null
 
     private fun installed(packageName: String): Boolean {
         return runCatching {
@@ -88,8 +107,6 @@ class Nip55Signer @Inject constructor(
         }.isSuccess
     }
 }
-
-private const val AMBER_PACKAGE = "com.greenart7c3.nostrsigner"
 
 private fun column(cursor: android.database.Cursor, name: String): String? {
     val index = cursor.getColumnIndex(name)

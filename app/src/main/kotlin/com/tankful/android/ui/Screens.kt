@@ -4,10 +4,14 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.widget.Toast
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Looper
+import com.tankful.android.sync.AMBER_PACKAGE
+import com.tankful.android.transfer.IMPORT_FILE_CAP
+import com.tankful.android.transfer.readCapped
 import androidx.activity.compose.rememberLauncherForActivityResult
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -237,8 +241,12 @@ private fun acceptAmberResult(result: androidx.activity.result.ActivityResult, s
     }
     val data = result.data
     val value = data?.getStringExtra("signature") ?: data?.getStringExtra("result")
-    val pkg = data?.getStringExtra("package") ?: "com.greenart7c3.nostrsigner"
-    if (value.isNullOrBlank()) sync.markNoAnswer() else sync.acceptAmber(pkg, value)
+    val pkg = data?.getStringExtra("package")
+    if (pkg != null && pkg != AMBER_PACKAGE) {
+        sync.markNoAnswer()
+        return
+    }
+    if (value.isNullOrBlank()) sync.markNoAnswer() else sync.acceptAmber(AMBER_PACKAGE, value)
 }
 
 @Composable
@@ -667,6 +675,7 @@ fun SettingsScreen(
         TankButton(stringResource(R.string.import_action)) { nav.navigate("import") }
         TankButton(stringResource(R.string.sync_title)) { nav.navigate("settings/sync") }
         RelayEditor(sync)
+        SupportRow()
     }
     LaunchedEffect(file) {
         val ready = file ?: return@LaunchedEffect
@@ -703,6 +712,51 @@ private fun RelayEditor(sync: SyncSettingsViewModel) {
         val accepted = sync.addRelay(draft)
         if (!accepted) invalid = true
         if (accepted) draft = ""
+    }
+}
+
+@Composable
+private fun SupportRow() {
+    val context = LocalContext.current
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(18.dp))
+            .clickable(role = Role.Button) {
+                if (openLightningSupport(context)) return@clickable
+                Toast.makeText(context, context.getString(R.string.support_copied), Toast.LENGTH_LONG).show()
+            }
+            .padding(horizontal = 16.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        LightningMark()
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.support_tankful), style = MaterialTheme.typography.titleSmall)
+            Text(
+                LIGHTNING_ADDRESS,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LightningMark() {
+    val ink = MaterialTheme.colorScheme.primary
+    Canvas(Modifier.size(18.dp)) {
+        val bolt = Path().apply {
+            moveTo(size.width * 0.55f, 0f)
+            lineTo(size.width * 0.15f, size.height * 0.55f)
+            lineTo(size.width * 0.48f, size.height * 0.55f)
+            lineTo(size.width * 0.38f, size.height)
+            lineTo(size.width * 0.88f, size.height * 0.42f)
+            lineTo(size.width * 0.52f, size.height * 0.42f)
+            close()
+        }
+        drawPath(bolt, ink)
     }
 }
 
@@ -751,8 +805,8 @@ fun ImportScreen(model: ImportViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: return@rememberLauncherForActivityResult
-        model.load(text)
+        val bytes = context.contentResolver.openInputStream(uri)?.use { readCapped(it, IMPORT_FILE_CAP) }
+        model.loadDocument(bytes)
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.import_action), style = MaterialTheme.typography.titleLarge)

@@ -42,4 +42,5 @@ dependencies {
     implementation(libs.secp256k1)
     implementation(libs.secp256k1.android)
     testImplementation(libs.junit)
+    testImplementation(libs.secp256k1.jvm)
 }

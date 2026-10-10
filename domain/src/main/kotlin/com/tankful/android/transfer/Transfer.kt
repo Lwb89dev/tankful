@@ -8,9 +8,15 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+
+const val IMPORT_FILE_CAP = 8 * 1024 * 1024
+const val IMPORT_JSON_CAP = 2 * 1024 * 1024
+private const val IMPORT_ENTRY_CAP = 32
 
 @Serializable
 data class IntervalJudgementContent(
@@ -135,12 +141,87 @@ fun zipBackup(exportJson: String, files: Map<String, ByteArray>): ByteArray {
         zip.write(exportJson.toByteArray(Charsets.UTF_8))
         zip.closeEntry()
         for ((path, bytes) in files) {
-            zip.putNextEntry(ZipEntry("attachments/$path"))
+            val name = safeAttachmentName(path) ?: continue
+            zip.putNextEntry(ZipEntry(name))
             zip.write(bytes)
             zip.closeEntry()
         }
     }
     return buffer.toByteArray()
+}
+
+/** One file name under attachments/. Rejects traversal and the key files. */
+fun safeAttachmentName(path: String): String? {
+    if (path.length !in 1..120) return null
+    if (path.any { it.isISOControl() || it == '/' || it == '\\' || it == ':' }) return null
+    if (path == "." || path == ".." || path.contains("..")) return null
+    val lower = path.lowercase()
+    if (lower == "signer-secret.bin" || lower == "db-key.bin") return null
+    return "attachments/$path"
+}
+
+/** A file inside root, or null when the relative path escapes or names a key file. */
+fun attachmentFile(root: File, relative: String): File? {
+    if (!relativePathSafe(relative)) return null
+    val base = runCatching { root.canonicalFile }.getOrNull() ?: return null
+    val candidate = runCatching { File(root, relative).canonicalFile }.getOrNull() ?: return null
+    val prefix = base.path + File.separator
+    if (!candidate.path.startsWith(prefix)) return null
+    val name = candidate.name.lowercase()
+    if (name == "signer-secret.bin" || name == "db-key.bin") return null
+    return candidate
+}
+
+private fun relativePathSafe(relative: String): Boolean {
+    if (relative.isEmpty() || relative.length > 200) return false
+    if (relative.startsWith("/") || relative.startsWith("\\") || relative.contains("..")) return false
+    if (relative.any { it == '\\' || it.isISOControl() }) return false
+    return true
+}
+
+/** Export JSON from a zip, or the bytes themselves when they are a small JSON file. */
+fun importDocument(bytes: ByteArray): String? {
+    if (bytes.size > IMPORT_FILE_CAP) return null
+    if (bytes.size >= 2 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4b.toByte()) {
+        return zipExportJson(bytes)
+    }
+    if (bytes.size > IMPORT_JSON_CAP) return null
+    return String(bytes, Charsets.UTF_8)
+}
+
+fun readCapped(input: InputStream, cap: Int): ByteArray? {
+    val out = ByteArrayOutputStream()
+    val buf = ByteArray(8192)
+    var total = 0
+    while (true) {
+        val count = input.read(buf)
+        if (count < 0) return out.toByteArray()
+        total += count
+        if (total > cap) return null
+        out.write(buf, 0, count)
+    }
+}
+
+private fun zipExportJson(bytes: ByteArray): String? {
+    ZipInputStream(bytes.inputStream()).use { return exportJsonEntry(it) }
+}
+
+private fun exportJsonEntry(zip: ZipInputStream): String? {
+    var seen = 0
+    var entry = zip.nextEntry
+    while (entry != null && seen < IMPORT_ENTRY_CAP) {
+        seen += 1
+        val text = namedExport(zip, entry.name)
+        if (text != null) return text
+        entry = zip.nextEntry
+    }
+    return null
+}
+
+private fun namedExport(zip: ZipInputStream, name: String): String? {
+    if (name != "export.json") return null
+    val bytes = readCapped(zip, IMPORT_JSON_CAP) ?: return null
+    return String(bytes, Charsets.UTF_8)
 }
 
 fun readZipEntry(zipBytes: ByteArray, name: String): ByteArray? {

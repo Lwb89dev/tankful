@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Dva polna rezervoarja istega goriva narišeta ta graf.</string>
     <string name="station_list_show">Pokaži črpalke</string>
     <string name="station_list_hide">Skrij črpalke</string>
+    <string name="catalogue_choose_fuel">Izberi gorivo pred shranjevanjem.</string>
+    <string name="catalogue_choose_vehicle">Tapni vozilo na seznamu pred shranjevanjem.</string>
+    <string name="support_tankful">Podprite Tankful</string>
+    <string name="support_copied">Naslov Lightning kopiran</string>
 </resources>

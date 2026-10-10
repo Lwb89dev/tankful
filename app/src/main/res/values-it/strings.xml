@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Due pieni dello stesso carburante disegnano questo grafico.</string>
     <string name="station_list_show">Mostra i distributori</string>
     <string name="station_list_hide">Nascondi i distributori</string>
+    <string name="catalogue_choose_fuel">Scegli un carburante prima di salvare.</string>
+    <string name="catalogue_choose_vehicle">Tocca un veicolo dell\'elenco prima di salvare.</string>
+    <string name="support_tankful">Supporta Tankful</string>
+    <string name="support_copied">Indirizzo Lightning copiato</string>
 </resources>

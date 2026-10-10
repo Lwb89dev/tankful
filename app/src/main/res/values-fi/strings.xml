@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Kaksi saman polttoaineen täyttä tankkausta piirtää tämän kaavion.</string>
     <string name="station_list_show">Näytä asemat</string>
     <string name="station_list_hide">Piilota asemat</string>
+    <string name="catalogue_choose_fuel">Valitse polttoaine ennen tallennusta.</string>
+    <string name="catalogue_choose_vehicle">Napauta listan ajoneuvoa ennen tallennusta.</string>
+    <string name="support_tankful">Tue Tankful</string>
+    <string name="support_copied">Lightning-osoite kopioitu</string>
 </resources>

@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Deux pleins du même carburant tracent ce graphique.</string>
     <string name="station_list_show">Afficher les stations</string>
     <string name="station_list_hide">Masquer les stations</string>
+    <string name="catalogue_choose_fuel">Choisis un carburant avant d\'enregistrer.</string>
+    <string name="catalogue_choose_vehicle">Touche un véhicule de la liste avant d\'enregistrer.</string>
+    <string name="support_tankful">Soutenir Tankful</string>
+    <string name="support_copied">Adresse Lightning copiée</string>
 </resources>

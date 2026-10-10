@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Dve plné nádrže rovnakého paliva kreslia tento graf.</string>
     <string name="station_list_show">Zobraziť stanice</string>
     <string name="station_list_hide">Skryť stanice</string>
+    <string name="catalogue_choose_fuel">Vyber palivo pred uložením.</string>
+    <string name="catalogue_choose_vehicle">Ťukni na vozidlo v zozname pred uložením.</string>
+    <string name="support_tankful">Podporte Tankful</string>
+    <string name="support_copied">Adresa Lightning skopírovaná</string>
 </resources>

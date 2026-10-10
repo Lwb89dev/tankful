@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Två fulla tankar av samma bränsle ritar det här diagrammet.</string>
     <string name="station_list_show">Visa stationer</string>
     <string name="station_list_hide">Dölj stationer</string>
+    <string name="catalogue_choose_fuel">Välj ett bränsle innan du sparar.</string>
+    <string name="catalogue_choose_vehicle">Tryck på ett fordon i listan innan du sparar.</string>
+    <string name="support_tankful">Stöd Tankful</string>
+    <string name="support_copied">Lightning-adress kopierad</string>
 </resources>

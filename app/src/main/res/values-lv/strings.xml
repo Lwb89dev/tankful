@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Divas pilnas tvertnes ar vienu degvielu zīmē šo grafiku.</string>
     <string name="station_list_show">Rādīt stacijas</string>
     <string name="station_list_hide">Slēpt stacijas</string>
+    <string name="catalogue_choose_fuel">Izvēlies degvielu pirms saglabāšanas.</string>
+    <string name="catalogue_choose_vehicle">Pieskaries saraksta auto pirms saglabāšanas.</string>
+    <string name="support_tankful">Atbalstīt Tankful</string>
+    <string name="support_copied">Lightning adrese nokopēta</string>
 </resources>

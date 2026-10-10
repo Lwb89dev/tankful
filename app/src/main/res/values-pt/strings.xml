@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Dois depósitos cheios do mesmo combustível desenham este gráfico.</string>
     <string name="station_list_show">Mostrar postos</string>
     <string name="station_list_hide">Ocultar postos</string>
+    <string name="catalogue_choose_fuel">Escolhe um combustível antes de guardar.</string>
+    <string name="catalogue_choose_vehicle">Toca num veículo da lista antes de guardar.</string>
+    <string name="support_tankful">Apoie o Tankful</string>
+    <string name="support_copied">Endereço Lightning copiado</string>
 </resources>

@@ -7,7 +7,10 @@ import com.tankful.android.json.canonicalJson
 import com.tankful.android.ledger.VehicleRow
 import com.tankful.android.ledger.replacementVehicleId
 import com.tankful.android.model.ReminderKind
+import com.tankful.android.providers.publicHttpsHost
+import com.tankful.android.sync.RELAY_LIST_CAP
 import com.tankful.android.sync.endpointUsesRawSocket
+import com.tankful.android.sync.relayUrlAllowed
 import java.time.Instant
 import com.tankful.android.sync.ANDROID_RESULT_OK
 import com.tankful.android.sync.DecryptResult
@@ -38,8 +41,12 @@ import com.tankful.android.transfer.encodeExport
 import com.tankful.android.transfer.exportOmitsDeviceState
 import com.tankful.android.transfer.judgementCanonical
 import com.tankful.android.transfer.judgementContentHash
+import com.tankful.android.transfer.attachmentFile
+import com.tankful.android.transfer.IMPORT_FILE_CAP
+import com.tankful.android.transfer.importDocument
 import com.tankful.android.transfer.previewImport
 import com.tankful.android.transfer.readZipEntry
+import com.tankful.android.transfer.safeAttachmentName
 import com.tankful.android.transfer.zipBackup
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonArray
@@ -432,3 +439,56 @@ class ReminderCopyTest {
 
 @Suppress("unused")
 private val ancestorHint = ParentPointer("install-a", 1L)
+
+class RelayUrlTest {
+    @Test
+    fun allowsAHostAndRejectsUserinfo() {
+        assertTrue(relayUrlAllowed("wss://relay.damus.io"))
+        assertTrue(relayUrlAllowed("ws://192.168.1.20:8080"))
+        assertTrue(relayUrlAllowed("  ws://relay.local/path  "))
+        assertFalse(relayUrlAllowed("wss://user:pass@relay.damus.io"))
+        assertFalse(relayUrlAllowed("ws://foo bar"))
+        assertFalse(relayUrlAllowed("http://relay.example"))
+        assertEquals(8, RELAY_LIST_CAP)
+    }
+}
+
+class PublicHostTest {
+    @Test
+    fun staysOnTheOfficialHosts() {
+        assertTrue(publicHttpsHost("www.fueleconomy.gov"))
+        assertTrue(publicHttpsHost("www.mimit.gov.it"))
+        assertTrue(publicHttpsHost("overpass-api.de"))
+        assertFalse(publicHttpsHost("evil.example"))
+        assertFalse(publicHttpsHost("mimit.gov.it.evil.com"))
+    }
+}
+
+class ImportDocumentTest {
+    @Test
+    fun readsExportJsonFromTheZipAndSkipsKeyFiles() {
+        val json = """{"schema":"tankful-export-v1"}"""
+        val zip = zipBackup(json, mapOf("photo.jpg" to byteArrayOf(1), "../signer-secret.bin" to byteArrayOf(2)))
+        assertEquals(json, importDocument(zip))
+        assertNull(safeAttachmentName("../signer-secret.bin"))
+        assertNull(safeAttachmentName("db-key.bin"))
+        assertEquals("attachments/photo.jpg", safeAttachmentName("photo.jpg"))
+        val root = java.nio.file.Files.createTempDirectory("tankful-export").toFile()
+        try {
+            java.io.File(root, "signer-secret.bin").writeBytes(byteArrayOf(1))
+            assertNull(attachmentFile(root, "signer-secret.bin"))
+            assertNull(attachmentFile(root, "../signer-secret.bin"))
+            val note = java.io.File(root, "note.txt")
+            note.writeBytes(byteArrayOf(2))
+            assertEquals(note.canonicalFile, attachmentFile(root, "note.txt")!!.canonicalFile)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun rejectsAnOversizedPlainFile() {
+        val huge = ByteArray(IMPORT_FILE_CAP + 1)
+        assertNull(importDocument(huge))
+    }
+}

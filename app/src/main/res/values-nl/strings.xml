@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Twee volle tanks van dezelfde brandstof tekenen deze grafiek.</string>
     <string name="station_list_show">Stations tonen</string>
     <string name="station_list_hide">Stations verbergen</string>
+    <string name="catalogue_choose_fuel">Kies een brandstof voordat je opslaat.</string>
+    <string name="catalogue_choose_vehicle">Tik een voertuig in de lijst aan voordat je opslaat.</string>
+    <string name="support_tankful">Steun Tankful</string>
+    <string name="support_copied">Lightning-adres gekopieerd</string>
 </resources>

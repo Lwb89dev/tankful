@@ -12,6 +12,8 @@ import com.tankful.android.providers.EpaVehicleDraft
 import com.tankful.android.providers.MIMIT_DATASET_URL
 import com.tankful.android.providers.mimitCsvUrls
 import com.tankful.android.providers.OVERPASS_INTERPRETER_URL
+import com.tankful.android.providers.publicHttpsHost
+import com.tankful.android.transfer.readCapped
 import com.tankful.android.providers.OsmStation
 import com.tankful.android.providers.PricedStation
 import com.tankful.android.providers.PriceRead
@@ -40,10 +42,14 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import okhttp3.ResponseBody
 
 @Singleton
 class ExternalData @Inject constructor(
@@ -138,15 +144,29 @@ class ExternalData @Inject constructor(
     }
 
     private fun loadMimit(): MimitFiles? {
+        val remembered = rememberedBoard()
+        if (remembered != null) return remembered
         val page = readHttps(MIMIT_DATASET_URL) ?: return null
         val urls = mimitCsvUrls(page.text, page.finalUrl) ?: return null
         val prices = downloadCached(urls.prices) ?: return null
-        val stations = stationText(urls.stations, prices.text) ?: return null
+        val stationUrl = urls.stations
+        val stations = stationText(stationUrl, prices.text) ?: return null
+        rememberUrl("prices.url", urls.prices)
+        if (stationUrl != null) rememberUrl("stations.url", stationUrl)
         return MimitFiles(prices.text, stations, prices.publishedOn)
     }
 
+    private fun rememberedBoard(): MimitFiles? {
+        val pricesUrl = rememberedUrl("prices.url") ?: return null
+        val prices = downloadCached(pricesUrl) ?: return null
+        val stationUrl = rememberedUrl("stations.url")
+        val stations = if (stationUrl == null) prices else downloadCached(stationUrl)
+        if (stations == null) return null
+        return MimitFiles(prices.text, stations.text, prices.publishedOn)
+    }
+
     private fun downloadCached(url: String): CachedText? {
-        if (!url.startsWith("https://")) return null
+        if (!httpsUrl(url)) return null
         val dir = File(context.filesDir, "mimit").apply { mkdirs() }
         val file = File(dir, sha(url) + ".csv")
         val meta = File(dir, sha(url) + ".date")
@@ -157,11 +177,12 @@ class ExternalData @Inject constructor(
             if (published != null) return CachedText(file.readText(), published)
         }
         val request = Request.Builder().url(url).header("User-Agent", userAgent()).build()
-        http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return null
-            val text = response.body?.string().orEmpty()
+        val response = openPublic(request) ?: return null
+        response.use { open ->
+            if (!open.isSuccessful) return null
+            val text = readBody(open.body, CSV_BODY_CAP) ?: return null
             if (!text.contains('|')) return null
-            val published = publicationDate(url, response.header("Last-Modified"))
+            val published = publicationDate(url, open.header("Last-Modified"))
                 ?: extractionDate(text)
                 ?: return null
             file.writeText(text)
@@ -177,28 +198,89 @@ class ExternalData @Inject constructor(
     }
 
     private fun readHttps(url: String): HttpsBody? {
-        if (!url.startsWith("https://")) return null
+        if (!httpsUrl(url)) return null
         if (endpointUsesRawSocket(url)) return null
         val request = Request.Builder().url(url).header("User-Agent", userAgent()).build()
-        http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return null
-            val text = response.body?.string().orEmpty()
-            return HttpsBody(text, response.request.url.toString())
+        val response = openPublic(request) ?: return null
+        response.use { open ->
+            if (!open.isSuccessful) return null
+            val text = readBody(open.body, PUBLIC_BODY_CAP) ?: return null
+            return HttpsBody(text, open.request.url.toString())
         }
     }
 
     private fun get(url: String): String {
-        if (!url.startsWith("https://")) error("https required")
+        if (!httpsUrl(url)) error("https required")
         if (endpointUsesRawSocket(url)) error("raw socket refused")
         val request = Request.Builder().url(url).header("User-Agent", userAgent()).build()
         return execute(request)
     }
 
     private fun execute(request: Request): String {
-        http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) error("http ${response.code}")
-            return response.body?.string().orEmpty()
+        val response = openPublic(request) ?: error("https required")
+        response.use { open ->
+            if (!open.isSuccessful) error("http ${open.code}")
+            return readBody(open.body, PUBLIC_BODY_CAP) ?: error("http body")
         }
+    }
+
+    private fun rememberedUrl(name: String): String? {
+        val file = File(File(context.filesDir, "mimit"), name)
+        if (!file.isFile) return null
+        val url = file.readText().trim()
+        if (!httpsUrl(url)) return null
+        return url
+    }
+
+    private fun rememberUrl(name: String, url: String) {
+        if (!httpsUrl(url)) return
+        val dir = File(context.filesDir, "mimit").apply { mkdirs() }
+        File(dir, name).writeText(url)
+    }
+
+    private fun openPublic(request: Request): Response? {
+        var current = request
+        var redirects = 0
+        while (redirects <= 3) {
+            val response = followOne(current) ?: return null
+            if (response.code !in 300..399) return response
+            val next = redirected(current, response)
+            response.close()
+            if (next == null) return null
+            current = next
+            redirects += 1
+        }
+        return null
+    }
+
+    private fun followOne(request: Request): Response? {
+        if (!httpsAllowed(request.url)) return null
+        return http.newCall(request).execute()
+    }
+
+    private fun redirected(current: Request, response: Response): Request? {
+        val location = response.header("Location") ?: return null
+        val resolved = current.url.resolve(location) ?: return null
+        if (!httpsAllowed(resolved)) return null
+        return current.newBuilder().url(resolved).build()
+    }
+
+    private fun httpsAllowed(url: HttpUrl): Boolean {
+        if (url.scheme != "https") return false
+        if (url.username.isNotEmpty() || url.password.isNotEmpty()) return false
+        return publicHttpsHost(url.host)
+    }
+
+    private fun httpsUrl(url: String): Boolean {
+        if (url.length > 500) return false
+        val parsed = url.toHttpUrlOrNull() ?: return false
+        return httpsAllowed(parsed)
+    }
+
+    private fun readBody(body: ResponseBody?, cap: Int): String? {
+        if (body == null) return null
+        val bytes = body.byteStream().use { readCapped(it, cap) } ?: return null
+        return bytes.toString(Charsets.UTF_8)
     }
 
     private fun userAgent(): String = "Tankful Android/" + BuildConfig.APP_VERSION
@@ -209,6 +291,9 @@ class ExternalData @Inject constructor(
 
     private data class HttpsBody(val text: String, val finalUrl: String)
 }
+
+private const val PUBLIC_BODY_CAP = 2 * 1024 * 1024
+private const val CSV_BODY_CAP = 16 * 1024 * 1024
 
 private fun encode(value: String): String = URLEncoder.encode(value, Charsets.UTF_8.name())
 

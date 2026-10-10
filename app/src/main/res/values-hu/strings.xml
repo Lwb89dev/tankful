@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Két teli tank ugyanabból az üzemanyagból rajzolja ezt a grafikont.</string>
     <string name="station_list_show">Kutak mutatása</string>
     <string name="station_list_hide">Kutak elrejtése</string>
+    <string name="catalogue_choose_fuel">Válassz üzemanyagot mentés előtt.</string>
+    <string name="catalogue_choose_vehicle">Koppints egy járműre a listában mentés előtt.</string>
+    <string name="support_tankful">Támogassa a Tankful-t</string>
+    <string name="support_copied">Lightning-cím másolva</string>
 </resources>

@@ -24,6 +24,10 @@ import com.tankful.android.data.store.CatalogStore
 import com.tankful.android.data.store.DeviceSettings
 import com.tankful.android.data.store.GarageLog
 import com.tankful.android.data.store.LocalKeyStore
+import com.tankful.android.sync.AMBER_PACKAGE
+import com.tankful.android.sync.RELAY_LIST_CAP
+import com.tankful.android.sync.relayUrlAllowed
+import com.tankful.android.transfer.importDocument
 import com.tankful.android.data.store.ImportChoice
 import com.tankful.android.ledger.ExpenseRow
 import com.tankful.android.ledger.MaintenanceItemRow
@@ -703,26 +707,12 @@ internal val PUBLIC_RELAYS = listOf(
     "wss://relay.nostr.band",
 )
 
-internal fun homeRelayOk(raw: String): Boolean = socketHostOk(raw, "ws://")
-
-internal fun relayAddressOk(raw: String): Boolean {
+internal fun homeRelayOk(raw: String): Boolean {
     val url = raw.trim()
-    if (url.startsWith("wss://")) return socketHostOk(url, "wss://")
-    return socketHostOk(url, "ws://")
+    return url.startsWith("ws://") && !url.startsWith("wss://") && relayUrlAllowed(url)
 }
 
-private fun socketHostOk(raw: String, prefix: String): Boolean {
-    val url = raw.trim()
-    if (!url.startsWith(prefix)) return false
-    if (prefix == "ws://" && url.startsWith("wss://")) return false
-    if (url.any { it.isWhitespace() }) return false
-    val rest = url.removePrefix(prefix)
-    if (rest.isEmpty()) return false
-    val host = rest.substringBefore('/').substringBefore('?')
-    if (host.isEmpty() || host.startsWith(".")) return false
-    val name = host.substringBefore(':')
-    return name.isNotEmpty() && !name.startsWith(".")
-}
+internal fun relayAddressOk(raw: String): Boolean = relayUrlAllowed(raw)
 
 internal fun relayLinesOf(json: String): String {
     val parsed = runCatching { kotlinx.serialization.json.Json.parseToJsonElement(json) }.getOrNull()
@@ -818,10 +808,11 @@ class SyncSettingsViewModel @Inject constructor(
     }
 
     private suspend fun persistRelays(urls: List<String>) {
+        val kept = urls.map { it.trim() }.filter { relayUrlAllowed(it) }.distinct().take(RELAY_LIST_CAP)
         val current = catalog.settings()
-        val json = kotlinx.serialization.json.Json.encodeToString(urls)
+        val json = kotlinx.serialization.json.Json.encodeToString(kept)
         catalog.saveSettings(current.copy(relayUrlsJson = json, revision = current.revision + 1))
-        relayLines.value = urls.joinToString("\n")
+        relayLines.value = kept.joinToString("\n")
     }
 
     fun connect() {
@@ -836,12 +827,12 @@ class SyncSettingsViewModel @Inject constructor(
 
     fun acceptAmber(packageName: String, pubkey: String) {
         viewModelScope.launch {
-            if (pubkey.isBlank() || pubkey.length > 200) {
+            if (packageName != AMBER_PACKAGE || !amberPubkey(pubkey)) {
                 note.value = "no-answer"
                 return@launch
             }
             localKeys.clear()
-            device.setSigner(packageName, pubkey)
+            device.setSigner(AMBER_PACKAGE, pubkey)
             note.value = "connected"
         }
     }
@@ -899,7 +890,13 @@ class ImportViewModel @Inject constructor(private val backup: BackupStore) : Vie
     private var json: String = ""
     private val choices = linkedMapOf<String, ImportChoice>()
 
-    fun load(text: String) {
+    fun loadDocument(bytes: ByteArray?) {
+        val text = bytes?.let { importDocument(it) }
+        if (text == null) {
+            json = ""
+            previewState.value = ImportPreview("too large", emptyList())
+            return
+        }
         json = text
         viewModelScope.launch {
             previewState.value = withContext(Dispatchers.IO) { backup.preview(text) }
@@ -927,6 +924,8 @@ class StationsViewModel @Inject constructor(private val external: ExternalData) 
     val searching = busy.asStateFlow()
     private val problem = MutableStateFlow(false)
     val searchFailed = problem.asStateFlow()
+    private val searchGate = Mutex()
+    private var lastSearchAt = 0L
 
     fun aim(latitude: Double, longitude: Double) {
         centreState.value = latitude to longitude
@@ -934,19 +933,38 @@ class StationsViewModel @Inject constructor(private val external: ExternalData) 
 
     fun search(latitude: Double, longitude: Double, radiusMetres: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            busy.value = true
-            problem.value = false
-            val nearby = runCatching { external.stations(latitude, longitude, radiusMetres) }
-            val rows = nearby.getOrNull()
-            if (rows == null) {
-                problem.value = true
-                busy.value = false
-                return@launch
+            if (!searchGate.tryLock()) return@launch
+            try {
+                runSearch(latitude, longitude, radiusMetres)
+            } finally {
+                searchGate.unlock()
             }
-            found.value = runCatching { external.attachPrices(rows) }.getOrElse { rows.map { PricedStation(it, emptyList()) } }
-            busy.value = false
         }
     }
+
+    private suspend fun runSearch(latitude: Double, longitude: Double, radiusMetres: Int) {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastSearchAt < SEARCH_COOLDOWN_MILLIS) return
+        lastSearchAt = now
+        busy.value = true
+        problem.value = false
+        val nearby = runCatching { external.stations(latitude, longitude, radiusMetres) }
+        val rows = nearby.getOrNull()
+        if (rows == null) {
+            problem.value = true
+            busy.value = false
+            return
+        }
+        found.value = runCatching { external.attachPrices(rows) }.getOrElse { rows.map { PricedStation(it, emptyList()) } }
+        busy.value = false
+    }
+}
+
+private const val SEARCH_COOLDOWN_MILLIS = 4_000L
+
+private fun amberPubkey(value: String): Boolean {
+    if (value.length != 64) return false
+    return value.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
 }
 
 @HiltViewModel

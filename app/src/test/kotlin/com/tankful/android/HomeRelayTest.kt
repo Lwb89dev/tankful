@@ -32,5 +32,7 @@ class HomeRelayTest {
         assertFalse(relayAddressOk("http://relay.example"))
         assertFalse(relayAddressOk("wss://"))
         assertFalse(relayAddressOk(""))
+        assertFalse(relayAddressOk("wss://user:pass@relay.damus.io"))
+        assertFalse(homeRelayOk("ws://user:pass@192.168.1.20:8080"))
     }
 }

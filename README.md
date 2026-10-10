@@ -22,7 +22,7 @@ Domain tests do not need an emulator. Room tests use Robolectric. The app has no
 
 English in `app/src/main/res/values/strings.xml` is the source catalog. Code comments and this file stay in English. Other languages are resource translations and follow the device language. On Android 13 and later, the system per-app language list comes from `locales_config.xml`.
 
-Home, Timeline, Insights, Garage, the phrases "above official", "below official", and "matches official", and "Spend ÷ odometer span" stay in English in every language. So do the words odometer, signer, sync, and relay, and the labels Ownership, Correction, and Replacement.
+Home, Timeline, Insights, Garage, the phrases "above official", "below official", and "matches official", and "Spend ÷ odometer span" stay in English in every language. So do the words odometer, signer, sync, relay, and Lightning, and the labels Ownership, Correction, and Replacement.
 
 Shipped translations, besides English: Bulgarian, Croatian, Czech, Danish, Dutch, Estonian, Finnish, French, German, Greek, Hungarian, Irish, Italian, Latvian, Lithuanian, Maltese, Polish, Portuguese (European), Romanian, Slovak, Slovenian, Spanish, Swedish, Chinese (Simplified, `values-zh`; the per-app locale is `zh-CN`), Japanese, and Russian. There is no in-app language picker.
 
@@ -33,6 +33,14 @@ The stations screen uses MapLibre Android 11.11.0 with the OpenFreeMap Liberty s
 ## Sync
 
 Provisional kind 8472, unregistered, to be checked again before any publish. Sync stays off until you turn it on. Amber keeps the key. A pasted nsec is encrypted with the Android Keystore on this phone and is not sent to a relay.
+
+## Donations
+
+Settings opens the Lightning address `lwb89@blink.sv`, the same address Roadstr uses. The link is `lightning:lwb89@blink.sv`. If no wallet is installed, the address is copied.
+
+## Release signing
+
+A signed release reads `TANKFUL_SIGNING_FILE`, a properties file that stays outside this repository. It names `storeFile`, `storePassword`, `keyAlias`, and `keyPassword`. Without that file the release APK is unsigned. The keystore is not in git.
 
 ## Official catalogue
 

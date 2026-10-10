@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Два пълни резервоара с едно гориво чертаят тази графика.</string>
     <string name="station_list_show">Покажи станциите</string>
     <string name="station_list_hide">Скрий станциите</string>
+    <string name="catalogue_choose_fuel">Избери гориво преди запис.</string>
+    <string name="catalogue_choose_vehicle">Докосни автомобил от списъка преди запис.</string>
+    <string name="support_tankful">Подкрепи Tankful</string>
+    <string name="support_copied">Адресът Lightning е копиран</string>
 </resources>

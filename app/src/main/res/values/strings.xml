@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Two full tanks of the same fuel draw this chart.</string>
     <string name="station_list_show">Show stations</string>
     <string name="station_list_hide">Hide stations</string>
+    <string name="catalogue_choose_fuel">Choose a fuel before saving.</string>
+    <string name="catalogue_choose_vehicle">Tap a vehicle in the list before saving.</string>
+    <string name="support_tankful">Support Tankful</string>
+    <string name="support_copied">Lightning address copied</string>
 </resources>

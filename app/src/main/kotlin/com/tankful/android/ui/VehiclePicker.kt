@@ -193,12 +193,14 @@ private fun ColumnScope.DetailStep(
     var nickname by rememberSaveable { mutableStateOf("") }
     var selectedId by rememberSaveable { mutableStateOf("") }
     var pick by remember { mutableStateOf(CataloguePick()) }
+    var notice by rememberSaveable { mutableStateOf("") }
     val choice = choiceName.toChoice()
     val scope = choice?.let { catalogueScope(it, splitSpellings(makeSpellings), splitSpellings(modelSpellings)) }
     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         PickedLabel("$makeLabel  $modelLabel", onBack)
         Text(stringResource(R.string.fuel), style = HudLabel, color = MaterialTheme.colorScheme.secondary)
         FuelPicker(choiceName, vehicleFuels) { picked ->
+            notice = ""
             choiceName = picked
             if (picked != QuickFuelChoice.PETROL.name) alsoName = ""
             selectedId = ""
@@ -207,14 +209,21 @@ private fun ColumnScope.DetailStep(
             onScope(next)
         }
         if (choice == QuickFuelChoice.PETROL) AlsoFuel(alsoName) { alsoName = it }
-        DetailBody(scope, year, { year = it }, facets, pick, { pick = it; selectedId = "" }, loading, hits, selectedId) { selectedId = it }
+        DetailBody(scope, year, { year = it }, facets, pick, { pick = it; selectedId = "" }, loading, hits, selectedId) {
+            selectedId = it
+            notice = ""
+        }
         Field(stringResource(R.string.nickname), nickname) { if (it.length <= 40) nickname = it }
         Field(stringResource(R.string.plate), plate) { plate = it }
         TankButton(stringResource(R.string.save)) {
             val listed = scope != null && !scope.manual && facets.isNotEmpty()
             val also = alsoName.toChoice()
+            val block = vehicleSaveNotice(choice != null, listed, selectedId.isNotBlank())
+            notice = block
+            if (block.isNotEmpty()) return@TankButton
             saveVehicle(listed, selectedId, makeLabel, modelLabel, year, choice, also, plate, nickname, onSaveListed, onSaveManual)
         }
+        SaveNotice(notice)
     }
     LaunchedEffect(facets, pick, scope?.manual) {
         if (scope == null || scope.manual || facets.isEmpty()) return@LaunchedEffect
@@ -332,6 +341,24 @@ private fun AlsoFuel(alsoName: String, onAlso: (String) -> Unit) {
 private fun toggleFuel(current: String, next: String): String {
     if (current == next) return ""
     return next
+}
+
+@Composable
+private fun SaveNotice(code: String) {
+    val id = noticeText(code) ?: return
+    Text(stringResource(id), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.error)
+}
+
+internal fun vehicleSaveNotice(hasFuel: Boolean, listed: Boolean, selected: Boolean): String {
+    if (!hasFuel) return "fuel"
+    if (listed && !selected) return "vehicle"
+    return ""
+}
+
+private fun noticeText(code: String): Int? {
+    if (code == "fuel") return R.string.catalogue_choose_fuel
+    if (code == "vehicle") return R.string.catalogue_choose_vehicle
+    return null
 }
 
 private fun saveVehicle(

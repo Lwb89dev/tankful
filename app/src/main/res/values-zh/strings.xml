@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">同一燃料加满两次后才会画出这张图。</string>
     <string name="station_list_show">显示加油站</string>
     <string name="station_list_hide">隐藏加油站</string>
+    <string name="catalogue_choose_fuel">保存前先选择燃料。</string>
+    <string name="catalogue_choose_vehicle">保存前先点选列表中的一辆车。</string>
+    <string name="support_tankful">支持 Tankful</string>
+    <string name="support_copied">Lightning 地址已复制</string>
 </resources>

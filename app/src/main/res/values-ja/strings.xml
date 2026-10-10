@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">同じ燃料の満タン2回でこのグラフを描きます。</string>
     <string name="station_list_show">スタンドを表示</string>
     <string name="station_list_hide">スタンドを隠す</string>
+    <string name="catalogue_choose_fuel">保存する前に燃料を選んでください。</string>
+    <string name="catalogue_choose_vehicle">保存する前に一覧の車両をタップしてください。</string>
+    <string name="support_tankful">Tankfulをサポート</string>
+    <string name="support_copied">Lightningアドレスをコピーしました</string>
 </resources>

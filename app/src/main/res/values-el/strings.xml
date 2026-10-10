@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Δύο γεμάτα ρεζερβουάρ του ίδιου καυσίμου σχεδιάζουν αυτό το γράφημα.</string>
     <string name="station_list_show">Εμφάνιση πρατηρίων</string>
     <string name="station_list_hide">Απόκρυψη πρατηρίων</string>
+    <string name="catalogue_choose_fuel">Διάλεξε καύσιμο πριν αποθηκεύσεις.</string>
+    <string name="catalogue_choose_vehicle">Πάτα ένα όχημα στη λίστα πριν αποθηκεύσεις.</string>
+    <string name="support_tankful">Υποστήριξε το Tankful</string>
+    <string name="support_copied">Η διεύθυνση Lightning αντιγράφηκε</string>
 </resources>

@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Żewġ tankijiet mimlijin tal-istess fjuwil ifasslu din il-grafika.</string>
     <string name="station_list_show">Uri l-istazzjonijiet</string>
     <string name="station_list_hide">Aħbi l-istazzjonijiet</string>
+    <string name="catalogue_choose_fuel">Agħżel fjuwil qabel ma tissejvja.</string>
+    <string name="catalogue_choose_vehicle">Miss vettura fil-lista qabel ma tissejvja.</string>
+    <string name="support_tankful">Appoġġja lil Tankful</string>
+    <string name="support_copied">Indirizz Lightning ikkupjat</string>
 </resources>

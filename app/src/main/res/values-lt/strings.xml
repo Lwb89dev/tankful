@@ -181,4 +181,8 @@
     <string name="insight_no_consumption">Du pilni tos pačios kuro bakai nupiešia šią diagramą.</string>
     <string name="station_list_show">Rodyti degalines</string>
     <string name="station_list_hide">Slėpti degalines</string>
+    <string name="catalogue_choose_fuel">Pasirink kurą prieš išsaugodamas.</string>
+    <string name="catalogue_choose_vehicle">Bakstelėk automobilį sąraše prieš išsaugodamas.</string>
+    <string name="support_tankful">Paremkite Tankful</string>
+    <string name="support_copied">Lightning adresas nukopijuotas</string>
 </resources>
