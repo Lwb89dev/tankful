@@ -4,14 +4,14 @@ import com.tankful.android.data.db.OutboxEntity
 import com.tankful.android.json.canonicalJson
 import com.tankful.android.json.sha256Hex
 import com.tankful.android.json.toCanonicalString
-import com.tankful.android.ledger.JudgementRow
 import com.tankful.android.ledger.Logbook
-import com.tankful.android.ledger.RefuelRow
-import com.tankful.android.ledger.VehicleRow
+import com.tankful.android.model.SETTINGS_ENTITY_ID
 import com.tankful.android.model.SYNC_SCHEMA
 import com.tankful.android.transfer.IntervalJudgementContent
-import com.tankful.android.transfer.RefuelContent
-import com.tankful.android.transfer.VehicleContent
+import com.tankful.android.transfer.maintenanceContentOf
+import com.tankful.android.transfer.refuelContentOf
+import com.tankful.android.transfer.standaloneExpenseContent
+import com.tankful.android.transfer.vehicleContentOf
 import java.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -40,8 +40,44 @@ fun stampLogbook(book: Logbook, sync: Boolean, installId: String, now: Instant):
     val outbox = mutableListOf<OutboxEntity>()
     stampVehicles(book, sync, installId, updatedAt, outbox)
     stampRefuels(book, sync, installId, updatedAt, outbox)
+    stampExpenses(book, sync, installId, updatedAt, outbox)
+    stampMaintenance(book, sync, installId, updatedAt, outbox)
     stampJudgements(book, sync, installId, updatedAt, outbox)
     return outbox
+}
+
+fun settingsOutbox(
+    encoded: String,
+    revision: Long,
+    installId: String,
+    baseRevision: Long?,
+    baseInstallId: String?,
+    updatedAt: String,
+): OutboxEntity {
+    val hash = sha256Hex(encoded)
+    val wire = SnapshotWire(
+        schema = SYNC_SCHEMA,
+        entityType = "settings",
+        entityId = SETTINGS_ENTITY_ID,
+        revision = revision,
+        installId = installId,
+        baseRevision = baseRevision,
+        baseInstallId = baseInstallId,
+        contentHash = hash,
+        updatedAt = updatedAt,
+        tombstone = false,
+        content = canonicalJson.parseToJsonElement(encoded).jsonObject,
+    )
+    return OutboxEntity(
+        id = "settings:$SETTINGS_ENTITY_ID:$revision",
+        entityType = "settings",
+        entityId = SETTINGS_ENTITY_ID,
+        revision = revision,
+        state = "PENDING",
+        signedEvent = null,
+        payload = canonicalJson.encodeToString(wire),
+        createdAt = System.currentTimeMillis(),
+    )
 }
 
 private fun stampVehicles(
@@ -52,7 +88,7 @@ private fun stampVehicles(
     outbox: MutableList<OutboxEntity>,
 ) {
     for ((id, row) in book.vehicles.toList()) {
-        val encoded = canonicalJson.encodeToString(vehicleContent(row))
+        val encoded = canonicalJson.encodeToString(vehicleContentOf(row))
         val next = stamped(row.contentHash, row.revision, row.installId, row.deletedAt != null, encoded, installId, sync)
         if (next == null) continue
         book.vehicles[id] = row.copy(contentHash = next.hash, installId = next.installId)
@@ -68,11 +104,46 @@ private fun stampRefuels(
     outbox: MutableList<OutboxEntity>,
 ) {
     for ((id, row) in book.refuels.toList()) {
-        val encoded = canonicalJson.encodeToString(refuelContent(row))
+        val metres = row.odometerReadingId?.let { book.readings[it] }?.takeIf { it.deletedAt == null }?.metres
+        val encoded = canonicalJson.encodeToString(refuelContentOf(row, metres))
         val next = stamped(row.contentHash, row.revision, row.installId, row.deletedAt != null, encoded, installId, sync)
         if (next == null) continue
         book.refuels[id] = row.copy(contentHash = next.hash, installId = next.installId)
         if (sync) outbox += next.toOutbox("refuel", id, updatedAt, encoded)
+    }
+}
+
+private fun stampExpenses(
+    book: Logbook,
+    sync: Boolean,
+    installId: String,
+    updatedAt: String,
+    outbox: MutableList<OutboxEntity>,
+) {
+    for ((id, row) in book.expenses.toList()) {
+        val content = standaloneExpenseContent(row) ?: continue
+        val encoded = canonicalJson.encodeToString(content)
+        val next = stamped(row.contentHash, row.revision, row.installId, row.deletedAt != null, encoded, installId, sync)
+        if (next == null) continue
+        book.expenses[id] = row.copy(contentHash = next.hash, installId = next.installId)
+        if (sync) outbox += next.toOutbox("expense", id, updatedAt, encoded)
+    }
+}
+
+private fun stampMaintenance(
+    book: Logbook,
+    sync: Boolean,
+    installId: String,
+    updatedAt: String,
+    outbox: MutableList<OutboxEntity>,
+) {
+    for ((id, row) in book.maintenance.toList()) {
+        val metres = row.odometerReadingId?.let { book.readings[it] }?.takeIf { it.deletedAt == null }?.metres
+        val encoded = canonicalJson.encodeToString(maintenanceContentOf(row, metres))
+        val next = stamped(row.contentHash, row.revision, row.installId, row.deletedAt != null, encoded, installId, sync)
+        if (next == null) continue
+        book.maintenance[id] = row.copy(contentHash = next.hash, installId = next.installId)
+        if (sync) outbox += next.toOutbox("maintenance", id, updatedAt, encoded)
     }
 }
 
@@ -151,38 +222,4 @@ private fun Stamp.toOutbox(type: String, entityId: String, updatedAt: String, en
     )
 }
 
-private fun vehicleContent(row: VehicleRow): VehicleContent {
-    return VehicleContent(
-        id = row.id,
-        createdAt = row.createdAt.toCanonicalString(),
-        manufacturer = row.manufacturer,
-        model = row.model,
-        modelYear = row.modelYear,
-        powertrain = row.powertrain,
-        primaryFuel = row.primaryFuel,
-        secondaryFuel = row.secondaryFuel,
-        plate = row.plate,
-        vin = row.vin,
-        purchaseDate = row.purchaseDate,
-        purchasePriceMinor = row.purchasePriceMinor,
-        purchaseCurrency = row.purchaseCurrency,
-        tagIds = row.tagIds.sorted(),
-        nickname = row.nickname,
-    )
-}
 
-private fun refuelContent(row: RefuelRow): RefuelContent {
-    return RefuelContent(
-        id = row.id,
-        vehicleId = row.vehicleId,
-        timestamp = Instant.ofEpochMilli(row.timestampEpochMs).toCanonicalString(),
-        quantityAmount = row.quantity.amount,
-        quantityUnit = row.quantity.unit.name,
-        fuelKind = row.fuelKind.name,
-        energyKind = row.energyKind.name,
-        totalCurrency = row.total.currency,
-        totalMinor = row.total.minorUnits,
-        fullTank = row.fullTank,
-        tagIds = row.tagIds.sorted(),
-    )
-}

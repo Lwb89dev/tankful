@@ -113,6 +113,12 @@ class ExportRoundTripTest {
         )
         val json = encodeExport(document)
         assertTrue(exportOmitsDeviceState(json))
+        val themed = encodeExport(
+            document.copy(settings = SettingsContent(com.tankful.android.model.SETTINGS_ENTITY_ID, "EUR", theme = "DARK", measure = "METRIC")),
+        )
+        assertTrue(themed.contains("\"theme\":\"DARK\""))
+        assertTrue(exportOmitsDeviceState(themed))
+        assertFalse(themed.contains("installId"))
         assertFalse(json.contains("tagLinks"))
         assertTrue(json.contains("createdAt"))
         assertFalse(json.contains("fuel\""))
@@ -164,6 +170,18 @@ class ImportConflictPreviewTest {
         assertEquals(ImportRowKind.STAY_DELETED, preview.rows.single { it.id == "dead" }.kind)
         assertEquals("unknown field", previewImport("""{"schema":"tankful-export-v1","nope":1}""", emptyMap()).refused)
         assertEquals("unknown schema", previewImport("""{"schema":"tankful-export-v9"}""", emptyMap()).refused)
+    }
+
+    @Test
+    fun aStandaloneExpenseWithNoLocalHashIsInserted() {
+        val json = """
+            {"schema":"tankful-export-v1","exportedAt":"2026-10-03T12:00:00.000Z","appVersion":"1",
+            "expenses":[{"id":"e1","vehicleId":"v","categoryId":"legal.insurance",
+            "timestamp":"2026-10-03T12:00:00.000Z","totalCurrency":"EUR","totalMinor":100,"origin":"STANDALONE"}]}
+        """.trimIndent()
+        val preview = previewImport(json, mapOf("e1" to LocalHead("", false)))
+        assertNull(preview.refused)
+        assertEquals(ImportRowKind.INSERT, preview.rows.single { it.id == "e1" }.kind)
     }
 }
 

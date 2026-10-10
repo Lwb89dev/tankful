@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Tap a vehicle in the list before saving.</string>
     <string name="support_tankful">Support Tankful</string>
     <string name="support_copied">Lightning address copied</string>
+    <string name="relay_up">Relay answers</string>
+    <string name="relay_down">Relay did not answer</string>
 </resources>

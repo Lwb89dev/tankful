@@ -1,6 +1,7 @@
 package com.tankful.android.ui
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,6 +27,9 @@ import com.tankful.android.data.store.GarageLog
 import com.tankful.android.data.store.LocalKeyStore
 import com.tankful.android.sync.AMBER_PACKAGE
 import com.tankful.android.sync.RELAY_LIST_CAP
+import com.tankful.android.sync.RelayClient
+import com.tankful.android.sync.rawPictureField
+import com.tankful.android.sync.readNostrProfile
 import com.tankful.android.sync.relayUrlAllowed
 import com.tankful.android.transfer.importDocument
 import com.tankful.android.data.store.ImportChoice
@@ -76,18 +80,23 @@ import com.tankful.android.transfer.ImportPreview
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import okhttp3.OkHttpClient
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.ZoneId
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -674,7 +683,7 @@ class SettingsViewModel @Inject constructor(
         if (code !in MAJOR_CURRENCIES) return
         viewModelScope.launch(Dispatchers.IO) {
             val row = catalog.settings()
-            catalog.saveSettings(row.copy(defaultCurrency = code, revision = row.revision + 1))
+            catalog.saveSettings(row.copy(defaultCurrency = code))
             currencyState.value = code
         }
     }
@@ -714,11 +723,19 @@ internal fun homeRelayOk(raw: String): Boolean {
 
 internal fun relayAddressOk(raw: String): Boolean = relayUrlAllowed(raw)
 
+internal fun shortPubkey(pubkey: String): String {
+    val hex = pubkey.trim().lowercase()
+    if (hex.length < 12) return hex
+    return hex.take(8) + "…" + hex.takeLast(4)
+}
+
 internal fun relayLinesOf(json: String): String {
     val parsed = runCatching { kotlinx.serialization.json.Json.parseToJsonElement(json) }.getOrNull()
     val array = parsed as? kotlinx.serialization.json.JsonArray ?: return ""
     return array.mapNotNull { (it as? kotlinx.serialization.json.JsonPrimitive)?.content }.joinToString("\n")
 }
+
+data class NostrProfileCard(val name: String, val picture: Bitmap?)
 
 @HiltViewModel
 class SyncSettingsViewModel @Inject constructor(
@@ -726,6 +743,9 @@ class SyncSettingsViewModel @Inject constructor(
     private val catalog: CatalogStore,
     private val signer: com.tankful.android.sync.Nip55Signer,
     private val localKeys: LocalKeyStore,
+    private val relays: RelayClient,
+    private val http: OkHttpClient,
+    private val cards: ProfileCardCache,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
     val enabled = device.syncEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP), false)
@@ -737,6 +757,12 @@ class SyncSettingsViewModel @Inject constructor(
     private val relayLines = MutableStateFlow<String?>(null)
     val storedRelays = relayLines.asStateFlow()
     private val relayGate = Mutex()
+    private val profileState = MutableStateFlow<NostrProfileCard?>(null)
+    val profile = profileState.asStateFlow()
+    private val profileGate = Mutex()
+    private val health = MutableStateFlow<Map<String, Boolean?>>(emptyMap())
+    val relayHealth = health.asStateFlow()
+    private var probedKey = ""
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -744,6 +770,20 @@ class SyncSettingsViewModel @Inject constructor(
             relayGate.withLock {
                 if (relayLines.value != null) return@withLock
                 relayLines.value = runCatching { relayLinesOf(catalog.settings().relayUrlsJson) }.getOrDefault("")
+            }
+        }
+        viewModelScope.launch {
+            device.signerPubkey.collect { pubkey ->
+                withContext(Dispatchers.IO) { loadProfile(pubkey) }
+            }
+        }
+        viewModelScope.launch {
+            relayLines.collect { raw ->
+                val urls = raw.orEmpty().lines().filter { it.isNotEmpty() }
+                withContext(Dispatchers.IO) {
+                    probeRelays(urls)
+                    loadProfile(device.signerPubkey.first())
+                }
             }
         }
     }
@@ -811,8 +851,75 @@ class SyncSettingsViewModel @Inject constructor(
         val kept = urls.map { it.trim() }.filter { relayUrlAllowed(it) }.distinct().take(RELAY_LIST_CAP)
         val current = catalog.settings()
         val json = kotlinx.serialization.json.Json.encodeToString(kept)
-        catalog.saveSettings(current.copy(relayUrlsJson = json, revision = current.revision + 1))
+        catalog.saveSettings(current.copy(relayUrlsJson = json))
         relayLines.value = kept.joinToString("\n")
+    }
+
+    private suspend fun probeRelays(urls: List<String>) {
+        val key = urls.joinToString("\n")
+        if (key == probedKey) return
+        probedKey = key
+        if (urls.isEmpty()) {
+            health.value = emptyMap()
+            return
+        }
+        health.value = urls.associateWith { null }
+        val allow = urls.filter { it.startsWith("ws://") }.toSet()
+        val results = coroutineScope {
+            urls.map { url -> async { url to relays.reachable(url, allow) } }.awaitAll().toMap()
+        }
+        if (probedKey != key) return
+        health.value = results
+    }
+
+    private suspend fun loadProfile(pubkey: String?) {
+        profileGate.withLock { profileState.value = profileCard(pubkey) }
+    }
+
+    private suspend fun profileCard(pubkey: String?): NostrProfileCard? {
+        val key = pubkey?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }
+        if (key == null) {
+            cards.clear()
+            return null
+        }
+        val stored = cards.read(key)
+        val plan = profileFetchPlan(stored)
+        if (plan == ProfileFetch.SHOW) return cardOf(stored)
+        if (plan == ProfileFetch.PICTURE) return cardOf(downloadPicture(key, stored))
+        return cardOf(downloadMetadata(key))
+    }
+
+    private fun cardOf(stored: StoredProfile?): NostrProfileCard? {
+        if (stored == null) return null
+        val bitmap = stored.pictureBytes?.let { decodeProfilePicture(it) }
+        return NostrProfileCard(stored.name, bitmap)
+    }
+
+    private fun downloadPicture(pubkey: String, stored: StoredProfile?): StoredProfile? {
+        val url = stored?.pictureUrl ?: return stored
+        val bitmap = profileBitmap(http, url) ?: return stored
+        val bytes = encodeProfilePicture(bitmap)
+        bitmap.recycle()
+        if (bytes == null) return stored
+        cards.writePicture(pubkey, bytes)
+        return stored.copy(pictureBytes = bytes)
+    }
+
+    private suspend fun downloadMetadata(pubkey: String): StoredProfile {
+        val urls = relayLinesOf(catalog.settings().relayUrlsJson).lines().filter { it.isNotEmpty() }
+        val allow = urls.filter { it.startsWith("ws://") }.toSet()
+        val document = relays.profileDocument(urls, allow, pubkey)
+        val parsed = document?.let { readNostrProfile(it) }
+        val name = parsed?.name ?: shortPubkey(pubkey)
+        if (document == null) return StoredProfile(pubkey, name, null, null)
+        val rawPicture = rawPictureField(document)
+        val url = parsed?.picture
+        if (rawPicture.isNotEmpty() && url == null) return StoredProfile(pubkey, name, null, null)
+        val bitmap = url?.let { profileBitmap(http, it) }
+        val bytes = bitmap?.let { encodeProfilePicture(it) }
+        bitmap?.recycle()
+        cards.write(pubkey, name, url, bytes)
+        return StoredProfile(pubkey, name, url, bytes)
     }
 
     fun connect() {

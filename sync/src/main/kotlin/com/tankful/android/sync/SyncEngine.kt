@@ -11,28 +11,31 @@ import com.tankful.android.data.db.SyncDao
 import com.tankful.android.data.store.CatalogStore
 import com.tankful.android.data.store.DeviceSettings
 import com.tankful.android.data.store.GarageLog
+import com.tankful.android.data.store.settingsOutbox
 import com.tankful.android.json.canonicalJson
 import com.tankful.android.json.sha256Hex
 import com.tankful.android.json.toCanonicalString
-import com.tankful.android.ledger.ExpenseRow
 import com.tankful.android.ledger.JudgementRow
 import com.tankful.android.ledger.Logbook
-import com.tankful.android.ledger.RefuelRow
 import com.tankful.android.ledger.VehicleRow
-import com.tankful.android.model.EnergyKind
 import com.tankful.android.model.ExpenseOrigin
-import com.tankful.android.model.FuelKind
+import com.tankful.android.model.SETTINGS_ENTITY_ID
 import com.tankful.android.model.SYNC_SCHEMA
 import com.tankful.android.model.TANKFUL_SNAPSHOT_KIND
-import com.tankful.android.money.Money
-import com.tankful.android.money.UnitPrice
-import com.tankful.android.money.currencyMinorScale
-import com.tankful.android.money.deriveUnitPriceUnscaled
-import com.tankful.android.quantity.Quantity
-import com.tankful.android.quantity.QuantityUnit
+import com.tankful.android.money.MAJOR_CURRENCIES
+import com.tankful.android.quantity.MEASURE_IMPERIAL
+import com.tankful.android.quantity.MEASURE_METRIC
+import com.tankful.android.transfer.ExpenseContent
 import com.tankful.android.transfer.IntervalJudgementContent
+import com.tankful.android.transfer.MaintenanceContent
 import com.tankful.android.transfer.RefuelContent
+import com.tankful.android.transfer.SettingsContent
 import com.tankful.android.transfer.VehicleContent
+import com.tankful.android.transfer.restoreExpense
+import com.tankful.android.transfer.restoreMaintenance
+import com.tankful.android.transfer.restoreRefuel
+import com.tankful.android.transfer.systemCategoryIds
+import com.tankful.android.transfer.userSettings
 import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
@@ -62,6 +65,7 @@ class SyncEngine @Inject constructor(
         val allow = urls.filter { it.startsWith("ws://") }.toSet()
         val pubkey = device.signerPubkey.first() ?: return
         val packageName = device.signerPackage.first()
+        enqueueSettings()
         for (row in dao.pendingOutbox().take(OUTBOX_BATCH)) {
             publishRow(row, urls, allow, pubkey, packageName)
         }
@@ -185,9 +189,12 @@ class SyncEngine @Inject constructor(
         val pending = dao.pendingSnapshots().mapNotNull { row ->
             parseSnapshot(row.snapshotJson)?.let { PendingSnapshot(row.eventId, it) }
         }
+        val heads = headsOf(book).toMutableMap()
+        val settings = settingsHead()
+        if (settings != null) heads[settings.entityType to settings.entityId] = settings
         return SyncState(
             ownPubkey = pubkey,
-            heads = headsOf(book),
+            heads = heads,
             appliedEventIds = dao.appliedIds().toSet(),
             quarantinedEventIds = dao.quarantineIds().toSet(),
             pending = pending,
@@ -195,7 +202,10 @@ class SyncEngine @Inject constructor(
     }
 
     private suspend fun persist(state: SyncState) {
+        catalog.ensureCustomCategories(categoryIds(state.heads.values))
         garage.edit { book -> applyHeads(book, state.heads) }
+        val settings = state.heads["settings" to SETTINGS_ENTITY_ID]
+        if (settings != null) applySettings(settings)
         for (id in state.appliedEventIds) dao.insertApplied(AppliedEventEntity(id, System.currentTimeMillis()))
         for (id in state.quarantinedEventIds) dao.insertQuarantine(QuarantineEntity(id, "undecryptable", System.currentTimeMillis()))
         for (item in state.pending) {
@@ -234,6 +244,73 @@ class SyncEngine @Inject constructor(
         }
     }
 
+    private suspend fun enqueueSettings() {
+        val row = catalog.settings()
+        val content = userSettings(
+            row.defaultCurrency,
+            relayUrls(),
+            row.defaultLeadTimeDays,
+            device.theme.first(),
+            device.measure.first(),
+        )
+        val encoded = canonicalJson.encodeToString(content)
+        val hash = sha256Hex(encoded)
+        if (hash == row.contentHash && !row.installId.isNullOrBlank()) return
+        val installId = device.ensureInstallId()
+        val chained = !row.installId.isNullOrBlank() && !row.contentHash.isNullOrBlank()
+        val revision = if (chained) row.revision + 1 else row.revision
+        val baseRevision = if (chained) row.revision else null
+        val baseInstall = if (chained) row.installId else null
+        for (pending in dao.pendingOutbox()) {
+            if (pending.entityType == "settings") dao.deleteOutbox(pending.id)
+        }
+        val updatedAt = Instant.now().toCanonicalString()
+        dao.upsertOutbox(settingsOutbox(encoded, revision, installId, baseRevision, baseInstall, updatedAt))
+        catalog.saveSettings(row.copy(revision = revision, installId = installId, contentHash = hash))
+    }
+
+    private suspend fun settingsHead(): Head? {
+        val row = catalog.settings()
+        val install = row.installId ?: return null
+        val hash = row.contentHash ?: return null
+        if (install.isBlank() || hash.isBlank()) return null
+        val content = userSettings(
+            row.defaultCurrency,
+            relayUrls(),
+            row.defaultLeadTimeDays,
+            device.theme.first(),
+            device.measure.first(),
+        )
+        val encoded = canonicalJson.parseToJsonElement(canonicalJson.encodeToString(content)).jsonObject
+        return Head("settings", row.id, row.revision, install, null, null, hash, false, encoded, emptySet())
+    }
+
+    private suspend fun applySettings(head: Head) {
+        if (head.tombstone) return
+        val content = head.content ?: return
+        val decoded = runCatching {
+            canonicalJson.decodeFromJsonElement(SettingsContent.serializer(), content)
+        }.getOrNull() ?: return
+        if (decoded.id != SETTINGS_ENTITY_ID) return
+        val current = catalog.settings()
+        val currency = decoded.defaultCurrency.takeIf { it in MAJOR_CURRENCIES } ?: current.defaultCurrency
+        val relays = decoded.relayUrls.map { it.trim() }.filter { relayUrlAllowed(it) }.distinct().take(RELAY_LIST_CAP)
+        catalog.saveSettings(
+            current.copy(
+                defaultCurrency = currency,
+                relayUrlsJson = canonicalJson.encodeToString(relays),
+                defaultLeadTimeDays = decoded.defaultLeadTimeDays.coerceIn(0, 365),
+                revision = head.revision,
+                installId = head.installId,
+                contentHash = head.contentHash,
+            ),
+        )
+        val theme = decoded.theme
+        if (theme == "SYSTEM" || theme == "LIGHT" || theme == "DARK") device.setTheme(theme)
+        val measure = decoded.measure
+        if (measure == MEASURE_METRIC || measure == MEASURE_IMPERIAL) device.setMeasure(measure)
+    }
+
     private suspend fun relayUrls(): List<String> {
         val raw = catalog.settings().relayUrlsJson
         val array = runCatching { canonicalJson.parseToJsonElement(raw) }.getOrNull() as? JsonArray ?: return emptyList()
@@ -257,6 +334,13 @@ private fun headsOf(book: Logbook): Map<Pair<String, String>, Head> {
     val heads = linkedMapOf<Pair<String, String>, Head>()
     for (row in book.vehicles.values) putHead(heads, "vehicle", row.id, row.revision, row.installId, row.contentHash, row.deletedAt != null)
     for (row in book.refuels.values) putHead(heads, "refuel", row.id, row.revision, row.installId, row.contentHash, row.deletedAt != null)
+    for (row in book.expenses.values) {
+        if (row.origin != ExpenseOrigin.STANDALONE) continue
+        putHead(heads, "expense", row.id, row.revision, row.installId, row.contentHash, row.deletedAt != null)
+    }
+    for (row in book.maintenance.values) {
+        putHead(heads, "maintenance", row.id, row.revision, row.installId, row.contentHash, row.deletedAt != null)
+    }
     for (row in book.judgements.values) putHead(heads, "interval_judgement", row.id, row.revision, row.installId, row.contentHash, row.deletedAt != null)
     return heads
 }
@@ -275,10 +359,21 @@ private fun putHead(
 }
 
 private fun applyHeads(book: Logbook, heads: Map<Pair<String, String>, Head>) {
+    applyTyped(book, heads, "vehicle", ::applyVehicle)
+    applyTyped(book, heads, "refuel", ::applyRefuel)
+    applyTyped(book, heads, "expense", ::applyExpense)
+    applyTyped(book, heads, "maintenance", ::applyMaintenance)
+    applyTyped(book, heads, "interval_judgement", ::applyJudgement)
+}
+
+private fun applyTyped(
+    book: Logbook,
+    heads: Map<Pair<String, String>, Head>,
+    type: String,
+    apply: (Logbook, Head) -> Unit,
+) {
     for (head in heads.values) {
-        if (head.entityType == "vehicle") applyVehicle(book, head)
-        if (head.entityType == "refuel") applyRefuel(book, head)
-        if (head.entityType == "interval_judgement") applyJudgement(book, head)
+        if (head.entityType == type) apply(book, head)
     }
 }
 
@@ -318,55 +413,58 @@ private fun applyRefuel(book: Logbook, head: Head) {
     val existing = book.refuels[head.entityId]
     if (head.tombstone && existing != null) {
         book.refuels[head.entityId] = existing.copy(deletedAt = existing.deletedAt ?: System.currentTimeMillis())
+        val expense = book.expenses[existing.expenseId]
+        if (expense != null && expense.deletedAt == null) {
+            book.expenses[existing.expenseId] = expense.copy(deletedAt = existing.timestampEpochMs)
+        }
         return
     }
-    if (existing != null || head.content == null) return
     val content = head.content ?: return
     val decoded = runCatching { canonicalJson.decodeFromJsonElement(RefuelContent.serializer(), content) }.getOrNull() ?: return
-    if (decoded.quantityAmount <= 0L) return
-    val fuel = runCatching { FuelKind.valueOf(decoded.fuelKind) }.getOrNull() ?: return
-    val unit = if (fuel == FuelKind.CNG) QuantityUnit.GRAM else QuantityUnit.MILLILITRE
-    val quantity = Quantity.of(unit, decoded.quantityAmount)
-    val total = Money.of(decoded.totalCurrency, decoded.totalMinor)
-    val price = UnitPrice.of(
-        decoded.totalCurrency,
-        3,
-        deriveUnitPriceUnscaled(decoded.totalMinor, decoded.quantityAmount, 3, currencyMinorScale(decoded.totalCurrency)),
-        true,
-    )
-    val expenseId = "expense-${decoded.id}"
-    book.expenses[expenseId] = ExpenseRow(
-        id = expenseId,
-        vehicleId = decoded.vehicleId,
-        categoryId = "fuel",
-        timestampEpochMs = Instant.parse(decoded.timestamp).toEpochMilli(),
-        total = total,
-        note = null,
-        origin = ExpenseOrigin.REFUEL,
-        originId = decoded.id,
-        revision = head.revision,
-        installId = head.installId,
-    )
-    book.refuels[decoded.id] = RefuelRow(
-        id = decoded.id,
-        vehicleId = decoded.vehicleId,
-        timestampEpochMs = Instant.parse(decoded.timestamp).toEpochMilli(),
-        quantity = quantity,
-        fuelKind = fuel,
-        energyKind = EnergyKind.LIQUID,
-        unitPrice = price,
-        total = total,
-        amountsDisagreed = false,
-        fullTank = decoded.fullTank,
-        stationName = null,
-        note = null,
-        tagIds = decoded.tagIds,
-        odometerReadingId = null,
-        expenseId = expenseId,
-        revision = head.revision,
-        installId = head.installId,
-        contentHash = head.contentHash,
-    )
+    book.restoreRefuel(decoded, head.revision, head.installId, head.contentHash)
+}
+
+private fun applyExpense(book: Logbook, head: Head) {
+    val existing = book.expenses[head.entityId]
+    if (head.tombstone && existing != null && existing.origin == ExpenseOrigin.STANDALONE) {
+        book.expenses[head.entityId] = existing.copy(deletedAt = existing.deletedAt ?: System.currentTimeMillis())
+        return
+    }
+    val content = head.content ?: return
+    val decoded = runCatching { canonicalJson.decodeFromJsonElement(ExpenseContent.serializer(), content) }.getOrNull() ?: return
+    book.restoreExpense(decoded, categoriesFor(decoded.categoryId), head.revision, head.installId, head.contentHash)
+}
+
+private fun applyMaintenance(book: Logbook, head: Head) {
+    val existing = book.maintenance[head.entityId]
+    if (head.tombstone && existing != null) {
+        book.maintenance[head.entityId] = existing.copy(deletedAt = existing.deletedAt ?: System.currentTimeMillis())
+        val expense = book.expenses[existing.expenseId]
+        if (expense != null && expense.deletedAt == null) {
+            book.expenses[existing.expenseId] = expense.copy(deletedAt = existing.timestampEpochMs)
+        }
+        return
+    }
+    val content = head.content ?: return
+    val decoded = runCatching { canonicalJson.decodeFromJsonElement(MaintenanceContent.serializer(), content) }.getOrNull() ?: return
+    book.restoreMaintenance(decoded, categoriesFor(decoded.categoryId), head.revision, head.installId, head.contentHash)
+}
+
+private fun categoriesFor(id: String): Set<String> {
+    if (id.length !in 1..80 || id.any { it.isWhitespace() }) return systemCategoryIds()
+    return systemCategoryIds() + id
+}
+
+private fun categoryIds(heads: Collection<Head>): Set<String> {
+    val ids = mutableSetOf<String>()
+    for (head in heads) {
+        if (head.tombstone) continue
+        val content = head.content ?: continue
+        if (head.entityType != "expense" && head.entityType != "maintenance") continue
+        val id = content["categoryId"]?.jsonPrimitive?.contentOrNull ?: continue
+        ids += id
+    }
+    return ids
 }
 
 private fun applyJudgement(book: Logbook, head: Head) {

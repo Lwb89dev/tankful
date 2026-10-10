@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Atinge un vehicul din listă înainte de a salva.</string>
     <string name="support_tankful">Sprijiniți Tankful</string>
     <string name="support_copied">Adresă Lightning copiată</string>
+    <string name="relay_up">Relay răspunde</string>
+    <string name="relay_down">Relay nu a răspuns</string>
 </resources>

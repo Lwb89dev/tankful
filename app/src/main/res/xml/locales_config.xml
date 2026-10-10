@@ -12,11 +12,9 @@
     <locale android:name="de" />
     <locale android:name="el" />
     <locale android:name="hu" />
-    <locale android:name="ga" />
     <locale android:name="it" />
     <locale android:name="lv" />
     <locale android:name="lt" />
-    <locale android:name="mt" />
     <locale android:name="pl" />
     <locale android:name="pt" />
     <locale android:name="ro" />

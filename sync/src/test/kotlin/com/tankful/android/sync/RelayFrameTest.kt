@@ -17,6 +17,10 @@ class RelayFrameTest {
         assertFalse(relayAccepted("not json but \"OK\" true", id))
         assertTrue(relayPageEnded("""["EOSE","tankful"]""", "tankful"))
         assertFalse(relayPageEnded("""["EOSE","other"]""", "tankful"))
+        assertTrue(probeAlive("""["EOSE","tankful-ping"]"""))
+        assertTrue(probeAlive("""["EVENT","tankful-ping",{"id":"a"}]"""))
+        assertFalse(probeAlive("""["CLOSED","tankful-ping"]"""))
+        assertFalse(probeAlive("not json"))
     }
 
     @Test

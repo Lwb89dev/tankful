@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Toca un vehículo de la lista antes de guardar.</string>
     <string name="support_tankful">Apoya Tankful</string>
     <string name="support_copied">Dirección Lightning copiada</string>
+    <string name="relay_up">El relay responde</string>
+    <string name="relay_down">El relay no ha respondido</string>
 </resources>

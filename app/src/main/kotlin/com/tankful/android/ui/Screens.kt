@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.widget.Toast
 import android.location.LocationListener
 import android.location.LocationManager
@@ -12,6 +13,7 @@ import android.os.Looper
 import com.tankful.android.sync.AMBER_PACKAGE
 import com.tankful.android.transfer.IMPORT_FILE_CAP
 import com.tankful.android.transfer.readCapped
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -20,6 +22,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
@@ -27,8 +31,11 @@ import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -72,6 +79,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.IntOffset
@@ -80,8 +89,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
@@ -122,6 +129,7 @@ import java.util.UUID
 @Composable
 fun FirstRunScreen(onHome: () -> Unit, model: EditorViewModel = hiltViewModel(), sync: SyncSettingsViewModel = hiltViewModel()) {
     var step by rememberSaveable { mutableStateOf("intro") }
+    BackHandler(enabled = step != "intro") { step = previousOnboardingStep(step) }
     val result by model.result.collectAsStateWithLifecycle()
     val message by sync.message.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -145,6 +153,13 @@ fun FirstRunScreen(onHome: () -> Unit, model: EditorViewModel = hiltViewModel(),
         model.reset()
         onHome()
     }
+}
+
+internal fun previousOnboardingStep(step: String): String {
+    if (step == "vehicle") return "relays"
+    if (step == "relays") return "login"
+    if (step == "login") return "intro"
+    return step
 }
 
 @Composable
@@ -663,6 +678,7 @@ fun SettingsScreen(
     val theme by model.theme.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge)
+        ProfileRow(sync)
         UnitsAndCurrency(model)
         Text(stringResource(R.string.theme), style = HudLabel, color = MaterialTheme.colorScheme.secondary)
         ChoiceRow {
@@ -701,8 +717,9 @@ private fun RelayEditor(sync: SyncSettingsViewModel) {
     var draft by rememberSaveable { mutableStateOf("") }
     var invalid by rememberSaveable { mutableStateOf(false) }
     val saved = stored.orEmpty().lines().filter { it.isNotEmpty() }
+    val health by sync.relayHealth.collectAsStateWithLifecycle()
     Text(stringResource(R.string.relays), style = HudLabel, color = MaterialTheme.colorScheme.secondary)
-    saved.forEach { url -> RelayRow(url) { sync.removeRelay(url) } }
+    saved.forEach { url -> RelayRow(url, health[url]) { sync.removeRelay(url) } }
     Field(stringResource(R.string.relay_add), draft, stringResource(R.string.relay_add_hint)) {
         draft = it
         invalid = false
@@ -731,16 +748,64 @@ private fun showCopied(context: Context) {
 }
 
 @Composable
-private fun RelayRow(url: String, onRemove: () -> Unit) {
+private fun ProfileRow(sync: SyncSettingsViewModel) {
+    val card by sync.profile.collectAsStateWithLifecycle()
+    val shown = card ?: return
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        ProfileMark(shown.picture)
+        Text(shown.name, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+    }
+}
+
+@Composable
+private fun ProfileMark(bitmap: Bitmap?) {
+    if (bitmap == null) {
+        Box(Modifier.size(48.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape))
+        return
+    }
+    Image(
+        bitmap.asImageBitmap(),
+        contentDescription = null,
+        modifier = Modifier.size(48.dp).clip(CircleShape),
+        contentScale = ContentScale.Crop,
+    )
+}
+
+@Composable
+private fun RelayRow(url: String, up: Boolean?, onRemove: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 48.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        RelayMark(up)
         Text(url, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
         TextButton(onClick = onRemove, modifier = Modifier.heightIn(min = 48.dp)) {
             Text(stringResource(R.string.relay_remove))
         }
+    }
+}
+
+@Composable
+private fun RelayMark(up: Boolean?) {
+    val color = when (up) {
+        true -> Color(0xFF2E9B4A)
+        false -> Color(0xFFC4473A)
+        null -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val description = when (up) {
+        true -> stringResource(R.string.relay_up)
+        false -> stringResource(R.string.relay_down)
+        null -> ""
+    }
+    Canvas(
+        Modifier.size(12.dp).semantics { if (description.isNotEmpty()) contentDescription = description },
+    ) {
+        drawCircle(color)
     }
 }
 

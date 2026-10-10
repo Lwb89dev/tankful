@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Tapni vozilo na seznamu pred shranjevanjem.</string>
     <string name="support_tankful">Podprite Tankful</string>
     <string name="support_copied">Naslov Lightning kopiran</string>
+    <string name="relay_up">Relay odgovarja</string>
+    <string name="relay_down">Relay ni odgovoril</string>
 </resources>

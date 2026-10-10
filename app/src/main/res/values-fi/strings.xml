@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Napauta listan ajoneuvoa ennen tallennusta.</string>
     <string name="support_tankful">Tue Tankful</string>
     <string name="support_copied">Lightning-osoite kopioitu</string>
+    <string name="relay_up">Relay vastaa</string>
+    <string name="relay_down">Relay ei vastannut</string>
 </resources>

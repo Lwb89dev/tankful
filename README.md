@@ -16,23 +16,31 @@ Local-first vehicle logbook for Android. Money and fuel math live in `:domain`. 
 
 Use the Gradle wrapper, not the system Gradle. The wrapper is Gradle 8.13.
 
-Domain tests do not need an emulator. Room tests use Robolectric. The app has not been checked on a device or an emulator.
+Domain tests do not need an emulator. Room and app unit tests use Robolectric. The signed release APK is on the [v0.1.0](https://github.com/Lwb89dev/tankful/releases/tag/v0.1.0) GitHub release.
 
 ## Language
 
-English in `app/src/main/res/values/strings.xml` is the source catalog. Code comments and this file stay in English. Other languages are resource translations and follow the device language. On Android 13 and later, the system per-app language list comes from `locales_config.xml`.
+English in `app/src/main/res/values/strings.xml` is the source catalog and the fallback. Code comments and this file stay in English. The app follows the device language and loads the matching `values-*` catalog. A device language with no catalog uses English. On Android 13 and later, the system per-app language list comes from `locales_config.xml`. There is no in-app language picker.
 
 Home, Timeline, Insights, Garage, the phrases "above official", "below official", and "matches official", and "Spend ÷ odometer span" stay in English in every language. So do the words odometer, signer, sync, relay, and Lightning, and the labels Ownership, Correction, and Replacement.
 
-Shipped translations, besides English: Bulgarian, Croatian, Czech, Danish, Dutch, Estonian, Finnish, French, German, Greek, Hungarian, Irish, Italian, Latvian, Lithuanian, Maltese, Polish, Portuguese (European), Romanian, Slovak, Slovenian, Spanish, Swedish, Chinese (Simplified, `values-zh`; the per-app locale is `zh-CN`), Japanese, and Russian. There is no in-app language picker.
+Shipped translations, besides English: Bulgarian, Croatian, Czech, Danish, Dutch, Estonian, Finnish, French, German, Greek, Hungarian, Italian, Latvian, Lithuanian, Polish, Portuguese (European, `values-pt`), Romanian, Slovak, Slovenian, Spanish, Swedish, Chinese, Japanese, and Russian. Chinese text is Simplified. The same catalog is in `values-zh`, `values-zh-rCN`, `values-zh-rTW`, `values-zh-rHK`, `values-b+zh+Hans`, and `values-b+zh+Hant`, so a Chinese device language uses it. The per-app locale is `zh-CN`.
 
 ## Map
 
 The stations screen uses MapLibre Android 11.11.0 with the OpenFreeMap Liberty style. MapLibre Compose 0.18.0 is not used: it wants compileSdk 37. Stations come from Overpass only when you ask, with a 7-day cache. Italian board prices come from the MIMIT open data when a pump is within 300 m. Attribution: OpenMapTiles, OpenStreetMap, OpenFreeMap. The logbook works without that screen.
 
-## Sync
+## First run
 
-Provisional kind 8472, unregistered, to be checked again before any publish. Sync stays off until you turn it on. Amber keeps the key. A pasted nsec is encrypted with the Android Keystore on this phone and is not sent to a relay.
+The first run is four steps: what Tankful is, Amber login, relays, then the vehicle. System Back returns to the previous step. On the first step, Back closes the app.
+
+## Backup and sync
+
+Export and import cover vehicles, refuels, standalone expenses, maintenance records, custom categories, and settings: currency, relays, lead time, theme, and measure. A refuel keeps the station, note, unit price, and odometer. CNG is stored in grams. The fuel expense and the maintenance expense are written again on import, so the spend stays on the timeline. The file leaves out the signer, the nsec, the database key, the install id, the selected vehicle, and tag links.
+
+Sync publishes that same payload. It is NIP-44 encrypted to the logged-in pubkey and sent as provisional kind 8472, which is still unregistered. Another profile cannot decrypt it. Photos are not synced. Sync stays off until you turn it on. Amber keeps the key. A pasted nsec is encrypted with the Android Keystore on this phone and is not sent to a relay. A relay failure does not roll back Room.
+
+Settings shows the Nostr display name, or the name, and the HTTPS profile picture. After the first fetch both stay on the phone, and opening Settings does not ask the relays again. Logging out clears that cache. Each saved relay has a green dot when it answers a read-only check and a red dot when it does not. That check does not publish. Public relays are `wss://` with a host. One home relay may be `ws://` with a host. At most eight are stored. Global cleartext stays off.
 
 ## Donations
 

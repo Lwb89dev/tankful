@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Tik een voertuig in de lijst aan voordat je opslaat.</string>
     <string name="support_tankful">Steun Tankful</string>
     <string name="support_copied">Lightning-adres gekopieerd</string>
+    <string name="relay_up">Relay antwoordt</string>
+    <string name="relay_down">Relay heeft niet geantwoord</string>
 </resources>

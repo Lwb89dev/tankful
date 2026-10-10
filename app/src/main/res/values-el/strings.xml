@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Πάτα ένα όχημα στη λίστα πριν αποθηκεύσεις.</string>
     <string name="support_tankful">Υποστήριξε το Tankful</string>
     <string name="support_copied">Η διεύθυνση Lightning αντιγράφηκε</string>
+    <string name="relay_up">Το relay απαντά</string>
+    <string name="relay_down">Το relay δεν απάντησε</string>
 </resources>

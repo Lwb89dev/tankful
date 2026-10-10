@@ -43,9 +43,29 @@ class RelayClient @Inject constructor(
     suspend fun publish(url: String, allowCleartext: Set<String>, eventJson: String): RelayAttempt {
         val eventId = eventText(eventJson, "id") ?: return RelayAttempt(url, false, true)
         val sent = """["EVENT",$eventJson]"""
-        val messages = exchange(url, allowCleartext, sent) { text -> relayAccepted(text, eventId) }
+        val messages = exchange(url, allowCleartext, sent, { text -> relayAccepted(text, eventId) }, 20_000)
         val ack = messages.any { line -> relayAccepted(line, eventId) }
         return RelayAttempt(url, ack, messages.isEmpty())
+    }
+
+    suspend fun reachable(url: String, allowCleartext: Set<String>): Boolean {
+        val request = """["REQ","tankful-ping",{"kinds":[0],"limit":1}]"""
+        val messages = exchange(url, allowCleartext, request, ::probeAlive, 8_000)
+        return messages.any(::probeAlive)
+    }
+
+    suspend fun profileDocument(urls: List<String>, allowCleartext: Set<String>, author: String): String? {
+        val pubkey = author.lowercase()
+        if (pubkey.length != 64 || pubkey.any { it !in '0'..'9' && it !in 'a'..'f' }) return null
+        var bestAt = Long.MIN_VALUE
+        var best: String? = null
+        for (url in urls.take(RELAY_LIST_CAP)) {
+            val chosen = newestProfile(profileEvents(url, allowCleartext, pubkey), pubkey, bestAt)
+            if (chosen == null) continue
+            bestAt = chosen.first
+            best = chosen.second
+        }
+        return best
     }
 
     suspend fun fetch(url: String, allowCleartext: Set<String>, request: PageRequest, author: String): List<RelayEvent> {
@@ -58,7 +78,18 @@ class RelayClient @Inject constructor(
             if (until != null) put("until", until)
         }
         val req = """["REQ","tankful",$filter]"""
-        val messages = exchange(url, allowCleartext, req) { text -> relayPageEnded(text, "tankful") }
+        val messages = exchange(url, allowCleartext, req, { text -> relayPageEnded(text, "tankful") }, 20_000)
+        return messages.mapNotNull { parseEvent(it) }
+    }
+
+    private suspend fun profileEvents(url: String, allowCleartext: Set<String>, author: String): List<RelayEvent> {
+        val filter = buildJsonObject {
+            putJsonArray("kinds") { add(JsonPrimitive(0)) }
+            putJsonArray("authors") { add(JsonPrimitive(author)) }
+            put("limit", 1)
+        }
+        val request = """["REQ","tankful-profile",$filter]"""
+        val messages = exchange(url, allowCleartext, request, { relayPageEnded(it, "tankful-profile") }, 8_000)
         return messages.mapNotNull { parseEvent(it) }
     }
 
@@ -67,13 +98,15 @@ class RelayClient @Inject constructor(
         allowCleartext: Set<String>,
         payload: String,
         stop: (String) -> Boolean,
+        timeoutMs: Long,
     ): List<String> = withContext(Dispatchers.IO) {
         if (url.startsWith("ws://")) {
             if (!rawCleartextSocketAllowed(url, allowCleartext)) return@withContext emptyList()
-            return@withContext runCatching { rawWebSocket(url, payload, stop) }.getOrDefault(emptyList())
+            val timeout = timeoutMs.coerceIn(1_000, 20_000).toInt()
+            return@withContext runCatching { rawWebSocket(url, payload, stop, timeout) }.getOrDefault(emptyList())
         }
         if (!url.startsWith("wss://")) return@withContext emptyList()
-        withTimeoutOrNull(20_000) { socketMessages(url, payload, stop) }.orEmpty()
+        withTimeoutOrNull(timeoutMs) { socketMessages(url, payload, stop) }.orEmpty()
     }
 
     private suspend fun socketMessages(url: String, payload: String, stop: (String) -> Boolean): List<String> {
@@ -114,6 +147,25 @@ internal fun relayAccepted(line: String, eventId: String): Boolean {
     return flag is JsonPrimitive && flag.booleanOrNull == true
 }
 
+private fun newestProfile(events: List<RelayEvent>, author: String, bestAt: Long): Pair<Long, String>? {
+    var at = bestAt
+    var body: String? = null
+    for (event in events) {
+        if (!event.author.equals(author, ignoreCase = true) || event.createdAt < at) continue
+        at = event.createdAt
+        body = event.content
+    }
+    val text = body ?: return null
+    return at to text
+}
+
+internal fun probeAlive(line: String): Boolean {
+    val root = runCatching { canonicalJson.parseToJsonElement(line) }.getOrNull() as? JsonArray ?: return false
+    if (root.isEmpty()) return false
+    val kind = root[0].jsonPrimitive.contentOrNull
+    return kind == "EOSE" || kind == "EVENT" || kind == "NOTICE" || kind == "OK"
+}
+
 internal fun relayPageEnded(line: String, subscription: String): Boolean {
     val root = runCatching { canonicalJson.parseToJsonElement(line) }.getOrNull() as? JsonArray ?: return false
     if (root.size < 2) return false
@@ -134,15 +186,15 @@ private fun parseEvent(line: String): RelayEvent? {
     return RelayEvent(id, created, author, content)
 }
 
-internal fun rawWebSocket(url: String, payload: String, stop: (String) -> Boolean): List<String> {
+internal fun rawWebSocket(url: String, payload: String, stop: (String) -> Boolean, timeoutMs: Int = 15_000): List<String> {
     val frame = clientFrame(payload) ?: return emptyList()
     val uri = java.net.URI(url)
     val host = uri.host ?: return emptyList()
     if (host.isBlank() || uri.userInfo != null) return emptyList()
     val port = if (uri.port == -1) 80 else uri.port
     val socket = Socket()
-    socket.connect(java.net.InetSocketAddress(host, port), 15_000)
-    socket.soTimeout = 15_000
+    socket.connect(java.net.InetSocketAddress(host, port), timeoutMs)
+    socket.soTimeout = timeoutMs
     socket.use { open ->
         val output = open.getOutputStream()
         val key = Base64.getEncoder().encodeToString(java.security.SecureRandom().generateSeed(16))

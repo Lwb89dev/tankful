@@ -126,4 +126,15 @@ class CatalogStore @Inject constructor(
         require(row.id == SETTINGS_ENTITY_ID)
         database.catalog().upsertSettings(row)
     }
+
+    suspend fun ensureCustomCategories(ids: Collection<String>) {
+        val system = com.tankful.android.catalog.SYSTEM_CATEGORIES.map { it.id }.toSet()
+        val present = database.catalog().categoriesNow().map { it.id }.toSet()
+        val missing = ids.map { it.trim() }.filter { it.length in 1..80 && it !in system && it !in present }
+        if (missing.isEmpty()) return
+        val rows = missing.distinct().map { id ->
+            com.tankful.android.data.db.CategoryEntity(id, "other", false, 100, id.take(40), null, 1, null, null)
+        }
+        database.catalog().upsertCategories(rows)
+    }
 }

@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">保存する前に一覧の車両をタップしてください。</string>
     <string name="support_tankful">Tankfulをサポート</string>
     <string name="support_copied">Lightningアドレスをコピーしました</string>
+    <string name="relay_up">Relay は応答しています</string>
+    <string name="relay_down">Relay は応答しませんでした</string>
 </resources>

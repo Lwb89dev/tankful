@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Koppints egy járműre a listában mentés előtt.</string>
     <string name="support_tankful">Támogassa a Tankful-t</string>
     <string name="support_copied">Lightning-cím másolva</string>
+    <string name="relay_up">A relay válaszol</string>
+    <string name="relay_down">A relay nem válaszolt</string>
 </resources>

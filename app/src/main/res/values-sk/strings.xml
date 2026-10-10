@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Ťukni na vozidlo v zozname pred uložením.</string>
     <string name="support_tankful">Podporte Tankful</string>
     <string name="support_copied">Adresa Lightning skopírovaná</string>
+    <string name="relay_up">Relay odpovedá</string>
+    <string name="relay_down">Relay neodpovedal</string>
 </resources>

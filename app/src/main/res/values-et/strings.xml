@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">Puuduta nimekirjas sõidukit enne salvestamist.</string>
     <string name="support_tankful">Toeta Tankful</string>
     <string name="support_copied">Lightning-aadress kopeeritud</string>
+    <string name="relay_up">Relay vastab</string>
+    <string name="relay_down">Relay ei vastanud</string>
 </resources>

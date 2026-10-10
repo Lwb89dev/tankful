@@ -58,6 +58,12 @@ data class RefuelContent(
     val totalMinor: Long,
     val fullTank: Boolean,
     val tagIds: List<String> = emptyList(),
+    val stationName: String? = null,
+    val note: String? = null,
+    val unitPriceScale: Int? = null,
+    val unitPriceUnscaled: Long? = null,
+    val unitPriceDerived: Boolean? = null,
+    val odometerMetres: Long? = null,
 )
 
 @Serializable
@@ -72,11 +78,44 @@ data class AttachmentMeta(
 )
 
 @Serializable
+data class ExpenseContent(
+    val id: String,
+    val vehicleId: String,
+    val categoryId: String,
+    val timestamp: String,
+    val totalCurrency: String,
+    val totalMinor: Long,
+    val origin: String,
+    val note: String? = null,
+    val originId: String? = null,
+    val tagIds: List<String> = emptyList(),
+)
+
+@Serializable
+data class MaintenanceContent(
+    val id: String,
+    val vehicleId: String,
+    val timestamp: String,
+    val totalCurrency: String,
+    val totalMinor: Long,
+    val categoryId: String = "maintenance.scheduled_service",
+    val serviceTypeId: String = "general_service",
+    val note: String? = null,
+    val labourMinor: Long? = null,
+    val partsMinor: Long? = null,
+    val odometerMetres: Long? = null,
+    val expenseId: String? = null,
+    val tagIds: List<String> = emptyList(),
+)
+
+@Serializable
 data class SettingsContent(
     val id: String,
     val defaultCurrency: String,
     val relayUrls: List<String> = emptyList(),
     val defaultLeadTimeDays: Int = 7,
+    val theme: String? = null,
+    val measure: String? = null,
 )
 
 @Serializable
@@ -88,9 +127,9 @@ data class ExportDocument(
     val specifications: List<JsonObject> = emptyList(),
     val refuels: List<RefuelContent> = emptyList(),
     val odometerReadings: List<JsonObject> = emptyList(),
-    val expenses: List<JsonObject> = emptyList(),
+    val expenses: List<ExpenseContent> = emptyList(),
     val categories: List<JsonObject> = emptyList(),
-    val maintenanceRecords: List<JsonObject> = emptyList(),
+    val maintenanceRecords: List<MaintenanceContent> = emptyList(),
     val maintenanceItems: List<JsonObject> = emptyList(),
     val serviceProviders: List<JsonObject> = emptyList(),
     val serviceTypes: List<JsonObject> = emptyList(),
@@ -261,15 +300,23 @@ fun previewImport(json: String, local: Map<String, LocalHead>): ImportPreview {
     val deletedIds = document.deleted.map { it.id }.toSet()
     val rows = mutableListOf<ImportRow>()
     for (refuel in document.refuels) {
-        rows += classify(refuel.id, refuel.energyKind, null, deletedIds, local)
+        rows += classify(refuel.id, refuel.energyKind, contentHash(refuel), deletedIds, local)
     }
     for (judgement in document.intervalJudgements) {
         val hash = judgementContentHash(judgement)
         rows += classify(judgement.id, "LIQUID", hash, deletedIds, local)
     }
     for (vehicle in document.vehicles) {
-        rows += classify(vehicle.id, "LIQUID", null, deletedIds, local)
+        rows += classify(vehicle.id, "LIQUID", contentHash(vehicle), deletedIds, local)
     }
+    for (expense in document.expenses) {
+        rows += classify(expense.id, "LIQUID", contentHash(expense), deletedIds, local)
+    }
+    for (record in document.maintenanceRecords) {
+        rows += classify(record.id, "LIQUID", contentHash(record), deletedIds, local)
+    }
+    val settings = document.settings
+    if (settings != null) rows += classify(settings.id, "LIQUID", contentHash(settings), deletedIds, local)
     val seen = rows.map { it.id }.toSet()
     for (deleted in document.deleted) {
         if (deleted.id !in seen) rows += ImportRow(deleted.id, ImportRowKind.STAY_DELETED, "deleted")
@@ -288,18 +335,22 @@ private fun classify(
     if (id in deletedIds) return ImportRow(id, ImportRowKind.STAY_DELETED, "deleted")
     val head = local[id]
     if (head != null && head.tombstoned) return ImportRow(id, ImportRowKind.STAY_DELETED, "local tombstone")
-    if (head != null && hash != null && head.contentHash == hash) {
-        return ImportRow(id, ImportRowKind.AUTO_SKIP, "same hash")
+    if (head == null || hash == null || head.contentHash.isBlank()) {
+        return ImportRow(id, ImportRowKind.INSERT, "new")
     }
-    if (head != null && hash != null && head.contentHash != hash) {
-        return ImportRow(id, ImportRowKind.CONFLICT, "different hash")
-    }
-    return ImportRow(id, ImportRowKind.INSERT, "new")
+    if (head.contentHash == hash) return ImportRow(id, ImportRowKind.AUTO_SKIP, "same hash")
+    return ImportRow(id, ImportRowKind.CONFLICT, "different hash")
+}
+
+private inline fun <reified T> contentHash(value: T): String {
+    return sha256Hex(canonicalJson.encodeToString(value))
 }
 
 fun exportOmitsDeviceState(json: String): Boolean {
     return "selectedVehicleId" !in json &&
-        "\"theme\"" !in json &&
         "installId" !in json &&
-        "tagLinks" !in json
+        "tagLinks" !in json &&
+        "nsec" !in json &&
+        "signer-secret" !in json &&
+        "db-key" !in json
 }

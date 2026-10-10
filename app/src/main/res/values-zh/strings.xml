@@ -185,4 +185,6 @@
     <string name="catalogue_choose_vehicle">保存前先点选列表中的一辆车。</string>
     <string name="support_tankful">支持 Tankful</string>
     <string name="support_copied">Lightning 地址已复制</string>
+    <string name="relay_up">Relay 有响应</string>
+    <string name="relay_down">Relay 没有响应</string>
 </resources>
