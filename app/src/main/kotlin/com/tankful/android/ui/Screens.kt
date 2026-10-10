@@ -718,46 +718,16 @@ private fun RelayEditor(sync: SyncSettingsViewModel) {
 @Composable
 private fun SupportRow() {
     val context = LocalContext.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(18.dp))
-            .clickable(role = Role.Button) {
-                if (openLightningSupport(context)) return@clickable
-                Toast.makeText(context, context.getString(R.string.support_copied), Toast.LENGTH_LONG).show()
-            }
-            .padding(horizontal = 16.dp, vertical = 13.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        LightningMark()
-        Column(Modifier.weight(1f)) {
-            Text(stringResource(R.string.support_tankful), style = MaterialTheme.typography.titleSmall)
-            Text(
-                LIGHTNING_ADDRESS,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+    Text(LIGHTNING_ADDRESS, style = MaterialTheme.typography.bodyMedium)
+    TankButton(stringResource(R.string.support_tankful)) {
+        val opened = openLightningSupport(context)
+        if (!opened) showCopied(context)
     }
 }
 
-@Composable
-private fun LightningMark() {
-    val ink = MaterialTheme.colorScheme.primary
-    Canvas(Modifier.size(18.dp)) {
-        val bolt = Path().apply {
-            moveTo(size.width * 0.55f, 0f)
-            lineTo(size.width * 0.15f, size.height * 0.55f)
-            lineTo(size.width * 0.48f, size.height * 0.55f)
-            lineTo(size.width * 0.38f, size.height)
-            lineTo(size.width * 0.88f, size.height * 0.42f)
-            lineTo(size.width * 0.52f, size.height * 0.42f)
-            close()
-        }
-        drawPath(bolt, ink)
-    }
+private fun showCopied(context: Context) {
+    val copied = context.getString(R.string.support_copied)
+    Toast.makeText(context, copied, Toast.LENGTH_LONG).show()
 }
 
 @Composable
